@@ -24,6 +24,19 @@ class XcpMaster:
         addr_bytes = struct.pack(">I", address) # Big Endian 4-byte address
         data = [0xF6, 0x00, 0x00, 0x00, addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]]
         return self._build_cro(data)
+        
+    def create_get_seed_cro(self, mode: int = 0x00) -> can.Message:
+        """Builds a GET_SEED packet to request security authorization chunk."""
+        data = [0xF8, mode, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        return self._build_cro(data)
+        
+    def create_unlock_cro(self, key_bytes: bytes) -> can.Message:
+        """Builds an UNLOCK packet pushing the calculated key back to the ECU."""
+        length = len(key_bytes)
+        data = [0xF7, length] + list(key_bytes)
+        while len(data) < 8:
+            data.append(0x00)
+        return self._build_cro(data[:8])
 
     def create_upload_cro(self, num_bytes: int) -> can.Message:
         """Builds an UPLOAD packet to read memory from the current MTA."""
@@ -38,6 +51,12 @@ class XcpMaster:
         while len(data) < 8:
             data.append(0x00)
         return self._build_cro(data[:8])
+
+    def create_short_upload_cro(self, num_bytes: int, address: int) -> can.Message:
+        """Builds a SHORT_UPLOAD packet to define address and read in a single 8-byte frame."""
+        addr_bytes = struct.pack(">I", address)
+        data = [0xF4, num_bytes, 0x00, 0x00, addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]]
+        return self._build_cro(data)
 
     def parse_dto_response(self, message: can.Message) -> dict:
         """Parses a Data Transmission Object (DTO) string returned by the ECU."""

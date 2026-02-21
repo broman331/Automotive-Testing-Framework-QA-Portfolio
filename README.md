@@ -108,10 +108,11 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 #### 9. XCP/CCP Calibration Automation Toolkit
 * **Domain**: Measurement and Calibration Protocols (XCP), Parameter Tuning.
-* **What it does**: Automates an XCP Master connecting to a Mock Slave ECU holding a virtual internal memory map. Uses standard XCP formatted payloads (e.g. `0xFF` Connect, `0xF6` Set_MTA, `0xF5` Upload, `0xF0` Download).
+* **What it does**: Automates an XCP Master connecting to a Mock Slave ECU holding a virtual internal memory map. Uses standard XCP formatted payloads (e.g. `0xFF` Connect, `0xF8` Get_Seed, `0xF6` Set_MTA, `0xF4` Short_Upload, `0xF0` Download).
 * **Testing Focus**:
   * **Session Validation**: Asserts that memory transfer commands are securely rejected (`ERR_CMD_IGNORED`) if the tool has not initiated a formal `CONNECT` sequence.
-  * **Memory Polling (Read)**: `pytest` automatically sweeps specified hex addresses (e.g. `0x1000` Max Speed Limit) via `SET_MTA` and `UPLOAD`, successfully deciphering little-endian ECU DTO responses back into python integers.
+  * **Security Access (Seed & Key)**: Proves ECU security by artificially denying write access (`ERR_ACCESS_DENIED`) to critical addresses unless the master dynamically requests a Seed and accurately calculates the correct cryptographic Key to `UNLOCK` the session.
+  * **Memory Polling (Read)**: `pytest` automatically sweeps specified hex addresses (e.g. `0x1000` Max Speed Limit) via `SHORT_UPLOAD`, successfully deciphering little-endian ECU DTO responses back into python integers.
   * **On-The-Fly Flashing (Write)**: Tests dynamically tuning AEB Braking Gain parameters by constructing `DOWNLOAD` payloads and forcefully mutating the internal memory dictionary of the targeted Slave, verifying the write logic holds.
 
 ---

@@ -22,7 +22,9 @@ class XcpSlaveNode:
         }
         
         self.is_connected = False
+        self.is_unlocked = False
         self.mta = 0x00000000 # Memory Transfer Address pointer
+        self.current_seed = 0x00000000
 
     def process_cro(self, message: can.Message) -> can.Message:
         """Processes a Command Receive Object (CRO) and returns a Data Transmission Object (DTO)."""
@@ -40,7 +42,32 @@ class XcpSlaveNode:
         # 0xFE: DISCONNECT
         if pid == 0xFE:
             self.is_connected = False
+            self.is_unlocked = False
             return self._build_dto(0xFF, [0x00])
+
+        # 0xF8: GET_SEED (Security Access)
+        if pid == 0xF8:
+            # Mode = message.data[1] (0x00 = get seed)
+            # We generate a dummy random-ish seed for testing
+            self.current_seed = 0x12345678
+            seed_bytes = list(struct.pack(">I", self.current_seed))
+            # Return RES + Length + Seed
+            return self._build_dto(0xFF, [0x04] + seed_bytes)
+
+        # 0xF7: UNLOCK (Security Access)
+        if pid == 0xF7:
+            # Length = message.data[1]
+            key_bytes = bytes(message.data[2:6])
+            received_key = struct.unpack(">I", key_bytes)[0]
+            
+            # Dummy Algorithm: Key = Seed XOR 0xDEADBEEF
+            expected_key = self.current_seed ^ 0xDEADBEEF
+            
+            if received_key == expected_key:
+                self.is_unlocked = True
+                return self._build_dto(0xFF, [0x00])
+            else:
+                return self._build_dto(0xFE, [XcpError.ERR_ACCESS_DENIED])
 
         # 0xF6: SET_MTA (Set Memory Transfer Address)
         if pid == 0xF6:
@@ -63,11 +90,28 @@ class XcpSlaveNode:
             # Auto-increment MTA (Not strictly implementing full MTA bounds for simplicity)
             return self._build_dto(0xFF, data_out)
 
+        # 0xF4: SHORT_UPLOAD (Optimized single-command Read: MTA + Upload)
+        if pid == 0xF4:
+            num_elements = message.data[1]
+            addr_bytes = bytes(message.data[4:8])
+            short_mta = struct.unpack(">I", addr_bytes)[0]
+            
+            if short_mta not in self.memory:
+                return self._build_dto(0xFE, [XcpError.ERR_OUT_OF_RANGE])
+                
+            self.mta = short_mta
+            data_out = list(self.memory[self.mta])
+            return self._build_dto(0xFF, data_out)
+
         # 0xF0: DOWNLOAD (Write to MTA)
         if pid == 0xF0:
             num_elements = message.data[1]
             if self.mta not in self.memory:
                 return self._build_dto(0xFE, [XcpError.ERR_OUT_OF_RANGE])
+                
+            # Security Access Check: Protect AEB and RPM limits
+            if self.mta in [0x1004, 0x1008] and not self.is_unlocked:
+                return self._build_dto(0xFE, [XcpError.ERR_ACCESS_DENIED])
                 
             # Extract the payload to write
             write_data = message.data[2 : 2 + num_elements]

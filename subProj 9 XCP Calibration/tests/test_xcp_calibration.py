@@ -41,8 +41,47 @@ def test_901_xcp_connection_lifecycle(xcp_network):
     assert response["status"] == "RES"
     assert slave.is_connected == False
 
-def test_902_calibration_memory_upload(xcp_network):
-    """TC-902: Calibration Memory Upload (Read) - Reading Speed Limit (0x1000)"""
+def test_902_protected_memory_access_denied(xcp_network):
+    """TC-902: Protected Memory Access Denied - Attempt to write without unlocking"""
+    master, slave = xcp_network
+    slave.process_cro(master.create_connect_cro())
+    
+    slave.process_cro(master.create_set_mta_cro(address=0x1004))
+    
+    new_gain_bytes = struct.pack("<I", 990)
+    cro = master.create_download_cro(data_bytes=new_gain_bytes)
+    dto = slave.process_cro(cro)
+    response = master.parse_dto_response(dto)
+    
+    assert response["status"] == "ERR"
+    assert response["error_code"] == XcpError.ERR_ACCESS_DENIED
+
+def test_903_seed_and_key_authentication(xcp_network):
+    """TC-903: Seed & Key Authentication"""
+    master, slave = xcp_network
+    slave.process_cro(master.create_connect_cro())
+    
+    cro = master.create_get_seed_cro(mode=0x00)
+    dto = slave.process_cro(cro)
+    response = master.parse_dto_response(dto)
+    
+    assert response["status"] == "RES"
+    seed_bytes = response["payload"][1:5]
+    seed = struct.unpack(">I", seed_bytes)[0]
+    
+    # Compute Key (Mock algorithm: XOR 0xDEADBEEF)
+    key = seed ^ 0xDEADBEEF
+    key_bytes = struct.pack(">I", key)
+    
+    cro = master.create_unlock_cro(key_bytes)
+    dto = slave.process_cro(cro)
+    response = master.parse_dto_response(dto)
+    
+    assert response["status"] == "RES"
+    assert slave.is_unlocked == True
+
+def test_904_calibration_memory_upload(xcp_network):
+    """TC-904: Calibration Memory Upload (Read) - Reading Speed Limit (0x1000)"""
     master, slave = xcp_network
     
     # Connect
@@ -59,35 +98,49 @@ def test_902_calibration_memory_upload(xcp_network):
     response = master.parse_dto_response(dto)
     
     assert response["status"] == "RES"
-    # Unpack the little-endian 4-byte payload back to an integer
-    # response['payload'] includes the rest of the padding (up to 7 bytes total). 
-    # Extract the first 4 bytes.
     read_payload = response["payload"][:4]
     speed_limit = struct.unpack("<I", read_payload)[0]
     
     assert speed_limit == 120 # Default value setup in xcp_ecu.py
 
-def test_903_calibration_memory_download(xcp_network):
-    """TC-903: Calibration Memory Download (Write) - Mutating AEB Gain (0x1004)"""
+def test_905_calibration_memory_download(xcp_network):
+    """TC-905: Calibration Memory Download (Write) - Mutating AEB Gain (0x1004)"""
     master, slave = xcp_network
     slave.process_cro(master.create_connect_cro())
+    
+    # Authenticate to write to protected memory
+    dto = slave.process_cro(master.create_get_seed_cro(mode=0x00))
+    seed = struct.unpack(">I", master.parse_dto_response(dto)["payload"][1:5])[0]
+    key_bytes = struct.pack(">I", seed ^ 0xDEADBEEF)
+    slave.process_cro(master.create_unlock_cro(key_bytes))
     
     # Set MTA to 0x1004 (AEB Braking Gain)
     slave.process_cro(master.create_set_mta_cro(address=0x1004))
     
-    # Download (Write) New Payload (e.g. tuning gain from 850 up to 990)
+    # Download (Write) New Payload
     new_gain_bytes = struct.pack("<I", 990)
     cro = master.create_download_cro(data_bytes=new_gain_bytes)
     dto = slave.process_cro(cro)
     
     assert master.parse_dto_response(dto)["status"] == "RES"
     
-    # Now verify the memory physically changed in the ECU
+    # Verify memory physically changed
     assert struct.unpack("<I", slave.memory[0x1004])[0] == 990
+
+def test_906_short_upload_optimization(xcp_network):
+    """TC-906: Short Upload Optimization"""
+    master, slave = xcp_network
+    slave.process_cro(master.create_connect_cro())
     
-    # Also verify via an explicit UPLOAD command just to be thorough
-    slave.process_cro(master.create_set_mta_cro(address=0x1004))
-    dto = slave.process_cro(master.create_upload_cro(num_bytes=4))
-    read_val = struct.unpack("<I", master.parse_dto_response(dto)["payload"][:4])[0]
+    # Read Speed Limit straight from 0x1000 using 1 command
+    cro = master.create_short_upload_cro(num_bytes=4, address=0x1000)
+    dto = slave.process_cro(cro)
+    response = master.parse_dto_response(dto)
     
-    assert read_val == 990
+    assert response["status"] == "RES"
+    read_payload = response["payload"][:4]
+    speed_limit = struct.unpack("<I", read_payload)[0]
+    
+    assert speed_limit == 120
+    # Also verify that the pointer (MTA) updated
+    assert slave.mta == 0x1000
