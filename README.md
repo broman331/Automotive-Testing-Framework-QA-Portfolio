@@ -95,8 +95,6 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 8-12)
-
 #### 8. ISO 26262 Fault Injection Framework (Failure Modes)
 * **Domain**: Functional Safety, ISO 26262 Hardware Fault Modeling.
 * **What it does**: Simulates critical physical failures on the CAN bus using a Man-In-The-Middle (MITM) python proxy. Specifically injects: `DROP_ALL` (cut wires), `LATENCY` (CPU starvation), `CORRUPT_PAYLOAD` (Bit-flipping EMI), and `STALE_DATA` (frozen ADC sensors).
