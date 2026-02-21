@@ -1,0 +1,35 @@
+name: SubProj 3 UDS Diagnostic Fuzzer CI
+
+on:
+  push:
+    paths:
+      - 'subProj 3 UDS Diagnostic Tester/**'
+      - '.github/workflows/ci_subproj3.yml'
+  pull_request:
+    paths:
+      - 'subProj 3 UDS Diagnostic Tester/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        working-directory: './subProj 3 UDS Diagnostic Tester'
+        run: docker build -t uds_fuzzer_env .
+
+      - name: Run UDS Test Suite via Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/subProj\ 3\ UDS\ Diagnostic\ Tester:/app \
+            uds_fuzzer_env
+
+      - name: Upload Test Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uds-fuzzer-test-report
+          path: './subProj 3 UDS Diagnostic Tester/report.html'
+          retention-days: 14

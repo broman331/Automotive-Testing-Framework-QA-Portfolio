@@ -67,6 +67,24 @@ class TestUDSProtocolFuzzer:
         response = uds_env.unlock_security_access(level=1)
         assert response.positive
 
+    @pytest.mark.req("TC-309")
+    def test_ecu_hard_reset(self, uds_env):
+        """Test ID: TC-309 - Trigger ECU Hard Reset (0x11 0x01)"""
+        response = uds_env.ecu_reset(reset_type=1)
+        assert response.positive
+
+    @pytest.mark.req("TC-310")
+    def test_clear_dtc(self, uds_env):
+        """Test ID: TC-310 - Clear Diagnostic Information (0x14 0xFFFFFF)"""
+        response = uds_env.clear_dtc(group=0xFFFFFF)
+        assert response.positive
+
+    @pytest.mark.req("TC-311")
+    def test_tester_present(self, uds_env):
+        """Test ID: TC-311 - Tester Present keep-alive (0x3E 0x00)"""
+        response = uds_env.tester_present()
+        assert response.positive
+
     # ----------------------------------------------------
     # PART 2: Fuzzing & Negative Response Code (NRC) Assertions
     # ----------------------------------------------------

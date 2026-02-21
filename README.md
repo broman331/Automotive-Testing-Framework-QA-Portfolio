@@ -48,14 +48,17 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **ASIL-D Structural Coverage (`gcov`)**: CI/CD compilation flags asserting the C++ logic contains mathematical test coverage of all branches and decision trees.
   * **Embedded Memory Safety (`Valgrind`)**: 3,000,000 randomized continuous road tests validated by Valgrind resolving exactly 0 memory leaks across the execution loop.
 
+#### 3. UDS (Unified Diagnostic Services) Protocol Fuzzer 
+* **Domain:** ISO 14229 Diagnostics & Fuzzing
+* **What it does:** Simulates a virtual ECU listening for ISO-TP formatted payloads utilizing `python-can` and `udsoncan`. Evaluates automated logic across key Unified Diagnostic Services handling standard responses and error states.
+* **Testing Focus:**
+  * Valid sequence flow assertions against critical Service Identifiers (SIDs): `0x10` (Session Control), `0x11` (Reset), `0x14` (Clear DTCs), `0x22` (Read Data By Identifier), `0x27` (Security Access), and `0x3E` (Tester Present).
+  * **Negative Response Code (NRC) Fuzzing**: Artificially corrupting payload lengths (e.g., dropping bytes on `0x22`) or calling strictly secured SIDs out-of-order to assert the ECU correctly drops the frame and broadcasts the required ISO compliant fallback NRC (e.g., `0x13` Incorrect Length, `0x24` Request Sequence Error, `0x33` Security Access Denied).
+  * **Dockerization & CI/CD Validation**: Implemented an automated GitHub Actions pipeline spinning up the virtual sub-framework and asserting negative response compliance logic perfectly across all targeted boundaries.
+
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 3-12)
-
-#### 3. UDS (Unified Diagnostic Services) Protocol Fuzzer
-* **Focus**: ISO 14229 Diagnostics
-* **What it will do**: Implement an automation layer that transmits UDS SID arrays (e.g., `0x10` Diagnostic Session Control, `0x22` Read Data By Identifier) over Virtual CAN.
-* **Testing**: Assert that negative response codes (NRCs) are correctly returned on invalid payload lengths or improperly authenticated security access (`0x27`).
+### 🚧 Future Pipeline (Sub-Projects 4-12)
 
 #### 4. CAPL Scripting Equivalency Node (Remaining Bus Simulation)
 * **Focus**: Network Topologies

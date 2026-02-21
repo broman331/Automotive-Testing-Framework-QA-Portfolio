@@ -78,6 +78,24 @@ class MockUDSECU:
             else:
                 return bytearray([0x7F, 0x10, 0x12]) # Sub-function Not Supported
 
+        # 0x11 - ECU Reset
+        elif sid == 0x11:
+            if len(payload) != 2:
+                return bytearray([0x7F, 0x11, 0x13])
+            
+            reset_type = payload[1]
+            if reset_type in [0x01, 0x02, 0x03]: # Hard, KeyOffOn, Soft
+                return bytearray([0x51, reset_type])
+            else:
+                return bytearray([0x7F, 0x11, 0x12])
+
+        # 0x14 - Clear Diagnostic Information
+        elif sid == 0x14:
+            if len(payload) != 4:
+                return bytearray([0x7F, 0x14, 0x13])
+            # Emulate clearing DTCs successfully
+            return bytearray([0x54])
+
         # 0x22 - Read Data By Identifier
         elif sid == 0x22:
             if len(payload) != 3:
@@ -125,6 +143,19 @@ class MockUDSECU:
                     return bytearray([0x7F, 0x27, 0x33]) # Security Access Denied
             else:
                 return bytearray([0x7F, 0x27, 0x12]) # Sub-function Not Supported
+
+        # 0x3E - Tester Present
+        elif sid == 0x3E:
+            if len(payload) != 2:
+                return bytearray([0x7F, 0x3E, 0x13])
+            
+            sub_function = payload[1]
+            if sub_function == 0x00:
+                return bytearray([0x7E, 0x00])
+            elif sub_function == 0x80: # Suppress Positive Response Message Indication
+                return None # No response sent
+            else:
+                return bytearray([0x7F, 0x3E, 0x12])
 
         # Unknown SID
         else:
