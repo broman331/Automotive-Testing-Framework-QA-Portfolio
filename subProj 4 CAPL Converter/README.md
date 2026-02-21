@@ -23,6 +23,8 @@ The enclosed `pytest` suite does not just unit-test the RegEx. It performs an **
 4. Dynamically imports the compiled script, spins it up over a `virtual` Linux CAN bus, and asserts that the node is accurately transmitting the translated bytecode.
 
 ## Setup & Execution
+
+### Option A: Local Virtual Environment
 1. Initialize the environment:
 ```bash
 python3 -m venv venv
@@ -33,4 +35,15 @@ pip install -r requirements.txt
 2. Run the `pytest` suite ensuring correct syntax compilation and live execution:
 ```bash
 pytest tests/test_compiler.py --html=report.html --self-contained-html
+```
+
+### Option B: Docker Container
+1. Build the image:
+```bash
+docker build -t capl_converter_env .
+```
+
+2. Run the automated transpilation and testing suite inside the container:
+```bash
+docker run --rm -v $(pwd):/app capl_converter_env
 ```

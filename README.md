@@ -63,6 +63,7 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * C-like Variable and Method extraction (`setTimer()`, `write()`, `output()`).
   * Converting CAPL's single-threaded, proprietary event-blocks (`on start`, `on timer`) into POSIX-compliant python daemon `Threads` wrapping infinite sleep schedules.
   * An automated `pytest` suite simulating live CAN execution against the generated Python strings.
+  * **Dockerization & CI/CD Validation**: A GitHub Actions workflow builds a clean Docker abstraction testing the transpiler without polluting the host machine's Python packages.
 
 ---
 

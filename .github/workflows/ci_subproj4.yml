@@ -1,0 +1,35 @@
+name: SubProj 4 CAPL Converter CI
+
+on:
+  push:
+    paths:
+      - 'subProj 4 CAPL Converter/**'
+      - '.github/workflows/ci_subproj4.yml'
+  pull_request:
+    paths:
+      - 'subProj 4 CAPL Converter/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        working-directory: './subProj 4 CAPL Converter'
+        run: docker build -t capl_converter_env .
+
+      - name: Run CAPL Test Suite via Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/subProj\ 4\ CAPL\ Converter:/app \
+            capl_converter_env
+
+      - name: Upload Test Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capl-converter-test-report
+          path: './subProj 4 CAPL Converter/report.html'
+          retention-days: 14
