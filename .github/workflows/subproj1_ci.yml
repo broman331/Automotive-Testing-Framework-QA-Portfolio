@@ -1,0 +1,44 @@
+name: subProj 1 CI
+
+on:
+  push:
+    paths:
+      - 'subProj 1 Virtual CAN Bus Framework/**'
+      - '.github/workflows/subproj1_ci.yml'
+  pull_request:
+    paths:
+      - 'subProj 1 Virtual CAN Bus Framework/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: 'subProj 1 Virtual CAN Bus Framework'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Pytest suite
+      run: |
+        pytest
+        
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: subproj1-test-report
+        path: 'subProj 1 Virtual CAN Bus Framework/report.html'
