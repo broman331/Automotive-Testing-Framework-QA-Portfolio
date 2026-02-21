@@ -98,11 +98,16 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 ### 🚧 Future Pipeline (Sub-Projects 8-12)
 
 #### 8. ISO 26262 Fault Injection Framework (Failure Modes)
-* **Focus**: Hardware Fault Defect Simulation
-* **What it will do**: Simulate dropped bits, inverted frames, and extreme processor latencies.
-* **Testing**: Automatically evaluate if the Software-Under-Test gracefully enters a pre-defined "Safe State" or triggers standard Diagnostic Trouble Codes (DTCs).
+* **Domain**: Functional Safety, ISO 26262 Hardware Fault Modeling.
+* **What it does**: Simulates critical physical failures on the CAN bus using a Man-In-The-Middle (MITM) python proxy. Specifically injects: `DROP_ALL` (cut wires), `LATENCY` (CPU starvation), `CORRUPT_PAYLOAD` (Bit-flipping EMI), and `STALE_DATA` (frozen ADC sensors).
+* **Testing Focus**:
+  * **Safe State Evaluation**: Automated Pytest execution asserting that the target ECU correctly identifies the injected mathematical anomalies and safely degrades into predetermined `SafeState` enum modes (e.g. `TIMING_VIOLATION`, `IMPLAUSIBLE_SIGNAL`) rather than catastrophically failing.
 
-#### 8. XCP/CCP Calibration Automation Toolkit
+---
+
+### 🚧 Future Pipeline (Sub-Projects 9-12)
+
+#### 9. XCP/CCP Calibration Automation Toolkit
 * **Focus**: Measurement and Calibration
 * **What it will do**: A script module simulating XCP/CCP DAQ (Data Acquisition) lists over Ethernet or CAN.
 * **Testing**: Verifying that internal microcontroller memory address sweeps can be effectively spoofed and measured by the automated tooling.

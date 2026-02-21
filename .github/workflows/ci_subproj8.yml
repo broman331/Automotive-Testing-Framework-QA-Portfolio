@@ -1,0 +1,36 @@
+name: CI - subProj 8 ISO 26262 Fault Injection
+
+on:
+  push:
+    paths:
+      - 'subProj 8 ISO26262 Fault Injection/**'
+      - '.github/workflows/ci_subproj8.yml'
+  pull_request:
+    paths:
+      - 'subProj 8 ISO26262 Fault Injection/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        working-directory: './subProj 8 ISO26262 Fault Injection'
+        run: docker build -t subproj8_pipeline .
+
+      - name: Run Pytest Pytest inside Docker
+        working-directory: './subProj 8 ISO26262 Fault Injection'
+        run: docker run --name subproj8_runner subproj8_pipeline
+
+      - name: Extract Test Report
+        if: always()
+        run: docker cp subproj8_runner:/app/report.html "./subProj 8 ISO26262 Fault Injection/report.html"
+
+      - name: Upload Test Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SubProj8-ISO26262-TestReport
+          path: './subProj 8 ISO26262 Fault Injection/report.html'
