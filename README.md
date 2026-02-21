@@ -78,9 +78,9 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 #### 6. HIL Mock Dashboard (PyQt5)
 * **Domain**: GUI Development, Test Tooling, Python Automation.
-* **What it does**: A `PyQt5` graphical dashboard visualizing a backend Vehicle Simulation engine displaying speed and RPM. Crucially provides simulated hardware fault-injection interfaces (sliders/buttons).
+* **What it does**: A `PyQt5` graphical dashboard visualizing a backend Vehicle Simulation engine displaying speed, RPM, and steering angle. Crucially provides simulated hardware fault-injection interfaces (sliders/buttons), and dynamic CSS-based safety warnings (e.g., turning speed readouts red at > 120km/h).
 * **Testing Focus**:
-  * **Headless UI Automation**: `pytest-qt` rigorously drives the GUI dynamically, sliding telemetry dials and clicking fault buttons autonomously.
+  * **Headless UI Automation**: `pytest-qt` rigorously drives the GUI dynamically, sliding telemetry dials (Throttle, Steering) and clicking fault buttons (Brake Failure, Engine Overheat) autonomously.
   * **Xvfb Framebuffer CI Integration**: The GitHub Actions pipeline installs `Xvfb` (X virtual framebuffer) onto Ubuntu headless runners allowing Qt to draw visually "in-memory" and fully automating robust `pytest-qt` visual validation.
 
 ---

@@ -8,9 +8,9 @@ This project demonstrates the ability to build robust, Model-View-Controller (MV
 The entire graphical interface is automatically driven and tested headlessly via `pytest-qt` in a CI/CD pipeline.
 
 ## Core Architecture
-1. **Backend Simulation (`vehicle_sim.py`)**: A pure-Python physics loop calculating engine RPM, ground speed, and handling hardware states.
-2. **PyQt5 Frontend (`dashboard.py`)**: A graphical user interface (GUI) rendering telemetry (Labels), user overrides (Sliders), and fault injection panels (Buttons).
-3. **Automated GUI Testing (`tests/test_ui.py`)**: A `pytest-qt` suite that dynamically boots the UI and programmatically simulates mouse clicks and slider drags, asserting that the underlying physics engine reacts correctly.
+1. **Backend Simulation (`vehicle_sim.py`)**: A pure-Python physics engine calculating engine RPM, ground speed, steering angles, and interacting with hardware fault states (Brake Failures, Engine Overheating).
+2. **PyQt5 Frontend (`dashboard.py`)**: A graphical user interface (GUI) rendering telemetry (Labels), dynamic safety warnings (CSS injection), user overrides (Sliders for Throttle and Steering), and fault injection panels (Buttons).
+3. **Automated GUI Testing (`tests/test_ui.py`)**: A 10-case `pytest-qt` suite that dynamically boots the UI and programmatically simulates mouse clicks and slider drags, asserting that the underlying physics engine reacts correctly.
 
 ## Headless CI/CD Automation
 The `pytest-qt` suite is integrated into GitHub Actions (`.github/workflows/ci_subproj6.yml`). Because Ubuntu GitHub Runners do not have monitors, the pipeline installs `Xvfb` (X Virtual Framebuffer) to create a headless graphical environment, allowing Qt to render in memory while the automated tests click the invisible menus.

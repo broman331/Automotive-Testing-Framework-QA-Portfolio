@@ -7,15 +7,25 @@ class VehicleSimulator:
         self.speed_kmh = 0.0
         self.rpm = 0.0
         self.throttle_percent = 0.0
+        self.steering_angle = 0.0
         self.brake_failed = False
+        self.engine_overheated = False
         
     def set_throttle(self, percent: float):
         """Sets the throttle pedal position [0-100]."""
         self.throttle_percent = max(0.0, min(100.0, percent))
         
+    def set_steering(self, angle: float):
+        """Sets the steering wheel angle [-100 to 100]."""
+        self.steering_angle = max(-100.0, min(100.0, angle))
+        
     def inject_brake_failure(self):
         """Hardware fault injection: Brakes no longer decelerate the vehicle."""
         self.brake_failed = True
+        
+    def inject_engine_overheat(self):
+        """Hardware fault injection: Engine overheats and enters limp mode (max 50 km/h)."""
+        self.engine_overheated = True
         
     def tick(self, dt_seconds: float = 0.1):
         """
@@ -36,6 +46,10 @@ class VehicleSimulator:
         
         # Speed derived from RPM (simplistic single-gear ratio for testing)
         target_speed = self.rpm * 0.03  # Max ~180 km/h @ 6000 RPM
+        
+        # Override target speed if engine is overheating (Limp Mode)
+        if self.engine_overheated:
+            target_speed = min(target_speed, 50.0)
 
         if self.speed_kmh < target_speed:
             self.speed_kmh += 10.0 * dt_seconds * (self.throttle_percent / 100.0)
