@@ -1,0 +1,28 @@
+name: subProj 9 XCP Calibration
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'subProj 9 XCP Calibration/**'
+      - '.github/workflows/ci_subproj9.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'subProj 9 XCP Calibration/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker Image
+      run: |
+        cd "subProj 9 XCP Calibration"
+        docker build -t subproj9_pipeline .
+        
+    - name: Run Pytest in Container
+      run: |
+        docker run --rm subproj9_pipeline

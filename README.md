@@ -106,14 +106,19 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 9-12)
-
 #### 9. XCP/CCP Calibration Automation Toolkit
-* **Focus**: Measurement and Calibration
-* **What it will do**: A script module simulating XCP/CCP DAQ (Data Acquisition) lists over Ethernet or CAN.
-* **Testing**: Verifying that internal microcontroller memory address sweeps can be effectively spoofed and measured by the automated tooling.
+* **Domain**: Measurement and Calibration Protocols (XCP), Parameter Tuning.
+* **What it does**: Automates an XCP Master connecting to a Mock Slave ECU holding a virtual internal memory map. Uses standard XCP formatted payloads (e.g. `0xFF` Connect, `0xF6` Set_MTA, `0xF5` Upload, `0xF0` Download).
+* **Testing Focus**:
+  * **Session Validation**: Asserts that memory transfer commands are securely rejected (`ERR_CMD_IGNORED`) if the tool has not initiated a formal `CONNECT` sequence.
+  * **Memory Polling (Read)**: `pytest` automatically sweeps specified hex addresses (e.g. `0x1000` Max Speed Limit) via `SET_MTA` and `UPLOAD`, successfully deciphering little-endian ECU DTO responses back into python integers.
+  * **On-The-Fly Flashing (Write)**: Tests dynamically tuning AEB Braking Gain parameters by constructing `DOWNLOAD` payloads and forcefully mutating the internal memory dictionary of the targeted Slave, verifying the write logic holds.
 
-#### 9. Automotive Ethernet (SOME/IP) Protocol Tester
+---
+
+### 🚧 Future Pipeline (Sub-Projects 10-12)
+
+#### 10. Automotive Ethernet (SOME/IP) Protocol Tester
 * **Focus**: Modern Infotainment/Zonal Architectures
 * **What it will do**: Send structured SOME/IP (Scalable service-Oriented MiddlewarE over IP) payloads over UDP.
 * **Testing**: Assert dynamic Service Discovery (SD) and Publish/Subscribe pattern event listeners over a mock high-speed automotive network.
