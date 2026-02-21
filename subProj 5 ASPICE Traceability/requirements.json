@@ -1,0 +1,14 @@
+{
+    "REQ-001": {
+        "title": "System Initialization",
+        "description": "The mock application must initialize successfully without errors."
+    },
+    "REQ-002": {
+        "title": "Boundary Condition Validations",
+        "description": "The application must safely reject negative inputs."
+    },
+    "REQ-003": {
+        "title": "Safe State Degradation",
+        "description": "The application must default to an ISO 26262 safe state if memory throws a critical fault."
+    }
+}

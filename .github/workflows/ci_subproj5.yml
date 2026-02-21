@@ -1,0 +1,41 @@
+name: SubProj 5 ASPICE CI/CD Pipeline
+
+on:
+  push:
+    paths:
+      - 'subProj 5 ASPICE Traceability/**'
+      - '.github/workflows/ci_subproj5.yml'
+  pull_request:
+    paths:
+      - 'subProj 5 ASPICE Traceability/**'
+
+jobs:
+  aspice-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        working-directory: './subProj 5 ASPICE Traceability'
+        run: docker build -t aspice_pipeline .
+
+      - name: Run Tests & ASPICE Traceability Engine
+        working-directory: './subProj 5 ASPICE Traceability'
+        # The docker container will execute pytest -> generate report.xml -> run traceability_generator.py 
+        # If the generator finds an uncovered requirement, it inherently exits with code `1`, failing this CI/CD job and blocking the PR.
+        run: |
+          docker run --name aspice_runner aspice_pipeline
+
+      - name: Extract Traceability Matrix
+        if: always()
+        run: |
+          docker cp aspice_runner:/app/traceability_matrix.md "./subProj 5 ASPICE Traceability/traceability_matrix.md"
+          
+      - name: Upload ASPICE Traceability Matrix
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aspice-traceability-matrix
+          path: './subProj 5 ASPICE Traceability/traceability_matrix.md'
+          retention-days: 30

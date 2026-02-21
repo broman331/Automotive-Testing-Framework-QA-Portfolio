@@ -66,14 +66,17 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * An automated `pytest` suite simulating live CAN execution against the generated Python strings.
   * **Dockerization & CI/CD Validation**: A GitHub Actions workflow builds a clean Docker abstraction testing the transpiler without polluting the host machine's Python packages.
 
+#### 5. ASPICE Traceability & CI/CD Pipeline
+* **Domain**: DevOps, Continuous Integration & Automotive Standards (SWE.4 / SWE.6)
+* **What it does**: A pure Python Traceability Engine bridging an automated CI/CD Pytest lifecycle against a formalized Mock Requirement Database (JSON).
+* **Testing Focus**:
+  * **JUnit XML Parsing**: Built custom `conftest.py` hooks to inject `@pytest.mark.req("ID")` metadata natively into the generic `report.xml` output.
+  * **ASPICE Coverage Logic**: The `traceability_generator.py` script maps `Requirement ID` -> `Test Case ID` -> `Execution Results`. It automatically generates a Markdown Traceability Matrix.
+  * **CI/CD Blockers**: An automated GitHub Actions pipeline builds the testing abstraction in Docker. The Traceability generator explicitly exits with code `1` and fails the pipeline if an engineer commits code that adds a requirement without linking a passing execution test case.
+
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 5-12)
-
-#### 5. CI/CD Automotive Validation Pipeline
-* **Focus**: DevOps & Continuous Integration
-* **What it will do**: A complex GitHub Actions matrix that spins up virtual CAN environments inside Docker containers.
-* **Testing**: Asserts pipeline failures on branch code coverage drops below 100%, generates auto-updating HTML Test Reports (from subProj 1/2), and builds automated Docker images of the test suites.
+### 🚧 Future Pipeline (Sub-Projects 6-12)
 
 #### 6. OSEK/AUTOSAR NM State Machine Execution
 * **Focus**: AUTOSAR Network Management
