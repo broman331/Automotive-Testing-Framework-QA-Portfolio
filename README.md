@@ -76,16 +76,23 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **Orphaned Test Detection**: The tool natively cross-references the XML logs against the formal JSON database, violently failing the pipeline if engineers define tests wrapped in unregistered specification markers.
   * **CI/CD Blockers**: An automated GitHub Actions pipeline builds the abstraction in Docker. The Traceability generator explicitly exits with code `1` and fails the pipeline if an engineer commits code that adds a requirement without linking a passing execution test case.
 
+#### 6. HIL Mock Dashboard (PyQt5)
+* **Domain**: GUI Development, Test Tooling, Python Automation.
+* **What it does**: A `PyQt5` graphical dashboard visualizing a backend Vehicle Simulation engine displaying speed and RPM. Crucially provides simulated hardware fault-injection interfaces (sliders/buttons).
+* **Testing Focus**:
+  * **Headless UI Automation**: `pytest-qt` rigorously drives the GUI dynamically, sliding telemetry dials and clicking fault buttons autonomously.
+  * **Xvfb Framebuffer CI Integration**: The GitHub Actions pipeline installs `Xvfb` (X virtual framebuffer) onto Ubuntu headless runners allowing Qt to draw visually "in-memory" and fully automating robust `pytest-qt` visual validation.
+
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 6-12)
+### 🚧 Future Pipeline (Sub-Projects 7-12)
 
-#### 6. OSEK/AUTOSAR NM State Machine Execution
+#### 7. OSEK/AUTOSAR NM State Machine Execution
 * **Focus**: AUTOSAR Network Management
 * **What it will do**: Expand the basic Sleep/Wake commands of SubProj 1 into a full AUTOSAR logical ring topology.
 * **Testing**: Validating transition state graphs (Bus-Sleep -> Prepare-Bus-Sleep -> Network-Mode -> Repeat) ensuring nodes don't drop off the logical ring synchronously.
 
-#### 7. ISO 26262 Fault Injection Framework (Failure Modes)
+#### 8. ISO 26262 Fault Injection Framework (Failure Modes)
 * **Focus**: Hardware Fault Defect Simulation
 * **What it will do**: Simulate dropped bits, inverted frames, and extreme processor latencies.
 * **Testing**: Automatically evaluate if the Software-Under-Test gracefully enters a pre-defined "Safe State" or triggers standard Diagnostic Trouble Codes (DTCs).
