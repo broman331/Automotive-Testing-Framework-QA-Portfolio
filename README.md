@@ -91,6 +91,7 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 * **Testing Focus**:
   * **Network Synchronization**: `pytest` asserts that broadcasting a keep-alive from one node correctly pulls all other sleeping nodes into the `Repeat-Message` state.
   * **Coordinated Shutdown**: Automated timing tests ensuring the global transition to `Prepare-Bus-Sleep` only occurs when *all* simulated nodes fall silent.
+  * **Partial Networking & CBV Parsing**: Tests validate that waking payloads carrying specific Partial Networking Identifiers successfully wake up their target clusters while leaving isolated ECUs in deep sleep, and correctly parse Active/Passive wakeup flags from the Control Bit Vector.
 
 ---
 

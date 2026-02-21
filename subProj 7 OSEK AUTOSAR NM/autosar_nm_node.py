@@ -10,11 +10,13 @@ class AutosarNMNode:
     Mock AUTOSAR Network Management Node.
     Manages complex state transitions based on local application requirements and remote CAN callbacks.
     """
-    def __init__(self, node_id: int):
+    def __init__(self, node_id: int, pn_cluster: int = 1):
         self.node_id = node_id
+        self.pn_cluster = pn_cluster  # Partial Networking Identifier
         self.state = NMState.BUS_SLEEP
         
         self.network_requested_locally = False
+        self.active_wakeup = False  # CBV Flag: Did I wake the bus, or was I woken?
         
         # Simulated Timers in milliseconds
         self.timer_repeat_message = 0
@@ -30,6 +32,7 @@ class AutosarNMNode:
         """Active Application requests the network to wake up (Local WakeUp)."""
         self.network_requested_locally = True
         if self.state in [NMState.BUS_SLEEP, NMState.PREPARE_BUS_SLEEP]:
+            self.active_wakeup = True  # We initiated the wakeup
             self.transition_to(NMState.REPEAT_MESSAGE)
         elif self.state == NMState.READY_SLEEP:
             self.transition_to(NMState.NORMAL_OPERATION)
@@ -40,10 +43,15 @@ class AutosarNMNode:
         if self.state == NMState.NORMAL_OPERATION:
             self.transition_to(NMState.READY_SLEEP)
 
-    def on_nm_message_received(self):
-        """Callback: A remote NM PDU was received over the CAN bus (Remote WakeUp/KeepAlive)."""
+    def on_nm_message_received(self, target_pn_cluster: int, cbv_active_wakeup_bit: bool):
+        """Callback: A remote NM PDU was received over the CAN bus."""
+        # Partial Networking Check
+        if target_pn_cluster != self.pn_cluster:
+            return  # Ignore messages not targeted at our cluster
+            
         if self.state in [NMState.BUS_SLEEP, NMState.PREPARE_BUS_SLEEP]:
             # Remote wakeup triggers us to wake up synchronously
+            self.active_wakeup = False  # We were woken passively by someone else
             self.transition_to(NMState.REPEAT_MESSAGE)
         else:
             # If we are awake, this just resets the shutdown timeout

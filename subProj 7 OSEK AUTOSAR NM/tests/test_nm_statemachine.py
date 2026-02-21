@@ -13,7 +13,11 @@ class VirtualNetwork:
         # In a real CAN Bus, if A talks, B and C receive via `on_message_received` interrupt.
         for n in self.nodes:
             if n.node_id != sender.node_id:
-                n.on_nm_message_received()
+                # The payload contains the PNI matching the sender's cluster, and its active wakeup bit
+                n.on_nm_message_received(
+                    target_pn_cluster=sender.pn_cluster, 
+                    cbv_active_wakeup_bit=sender.active_wakeup
+                )
                 
     def tick_all(self, dt_ms: int):
         for n in self.nodes:
@@ -106,3 +110,34 @@ def test_706_bus_sleep_finalisation(network):
     # Timeout expires -> deep sleep
     node_a.tick(1)
     assert node_a.state == NMState.BUS_SLEEP
+
+# -------------------------------------------------------------
+# Part 4: Advanced NM Capabilities (CBV & Partial Networking)
+# -------------------------------------------------------------
+def test_707_cbv_active_passive_wakeup(network):
+    node_a, node_b, _ = network.nodes
+    
+    node_a.request_network()
+    network.broadcast_nm_message(sender=node_a)
+    
+    # Node A actively woke the bus. Node B was passively woken.
+    assert node_a.active_wakeup == True
+    assert node_b.active_wakeup == False
+
+def test_708_partial_networking_isolation(network):
+    # Add a 4th node on a different Partial Networking Cluster
+    node_d = AutosarNMNode(0x104, pn_cluster=2)
+    network.add_node(node_d)
+    
+    node_a, node_b, node_c = network.nodes[:3] # Original nodes are on cluster=1
+    
+    # Node A wakes up and broadcasts
+    node_a.request_network()
+    network.broadcast_nm_message(sender=node_a)
+    
+    # B and C (same cluster) should wake up
+    assert node_b.state == NMState.REPEAT_MESSAGE
+    assert node_c.state == NMState.REPEAT_MESSAGE
+    
+    # Node D (different cluster) MUST ignore the wakeup and stay asleep
+    assert node_d.state == NMState.BUS_SLEEP
