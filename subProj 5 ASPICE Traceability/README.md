@@ -11,7 +11,11 @@ This project demonstrates how to build an automated ASPICE compliance pipeline u
 1. **Requirements Database (`requirements.json`)**: A mock database of software requirements (e.g., `REQ-001: Initialization`, `REQ-003: Safe State Degradation`).
 2. **Pytest Integration (`test_mock_app.py`)**: A test suite that hooks custom `@pytest.mark.req("ID")` markers into natively exported `report.xml` JUnit XML files via a custom `conftest.py` interceptor.
 3. **Traceability Engine (`traceability_generator.py`)**: A Python lexer that parses the simulated requirements alongside the Pytest execution log.
-4. **Validation**: The engine maps `Requirement ID` -> `Test Case ID` -> `Execution Results`. It automatically generates a beautifully formatted Markdown Traceability matrix. If there is a missing test (0% coverage on a specific Requirement ID), it deliberately exits with `sys.exit(1)`, dropping the CI pipeline.
+4. **Validation Engine**: The engine maps `Requirement ID` -> `Test Case ID` -> `Execution Results`. It enforces:
+   - **One-to-Many Traceability**: Aggregates multiple pytests mapped to a single requirement. If *any* child test fails (e.g., positive tests pass but boundary tests fail), the parent requirement natively fails.
+   - **Orphaned Test Detection**: Prevents code rot by reverse-checking test markers against the requirement JSON. If a developer maps a test to a non-existent requirement (like `REQ-999`), the engine throws a compliance error.
+   - **Full Testing Coverage**: If a requirement has 0 mapped tests, the engine drops the build. 
+5. **Artifact Generation**: It automatically generates a beautifully formatted Markdown Traceability matrix. If any of the validations above fail, it explicitly exits with `sys.exit(1)`, dropping the CI pipeline.
 
 ## Automation & CI/CD
 This entire compliance check is wrapped in Docker and automated via GitHub Actions (`.github/workflows/ci_subproj5.yml`).
