@@ -23,6 +23,9 @@ By recreating Remaining Bus Simulation, ASPICE traceability matrices, Fuzzing al
 
 Below is the roadmap of the 12 standalone automotive validation frameworks contained in this repository. 
 
+> [!NOTE]
+> **Each completed sub-project directory contains its own dedicated `README.md` file with deeper technical implementation details, setup instructions, and execution workflows.**
+
 ### ✅ Completed Projects
 
 #### 1. Virtual CAN Bus Framework 
