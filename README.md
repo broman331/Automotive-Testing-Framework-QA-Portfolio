@@ -1,6 +1,6 @@
 
 <div align="center">
-  <h1>🛡️ Aegis Automotive QA Portfolio</h1>
+  <h1>🛡️ Automotive QA Portfolio</h1>
   <h3>Advanced Automotive Software Validation & Functional Safety (ASIL) Frameworks</h3>
   <p><i>A comprehensive engineering portfolio demonstrating modern Software-in-the-Loop (SiL) and Hardware-in-the-Loop (HiL) testing methodologies, network state management, and continuous integration tailored for safety-critical automotive domains.</i></p>
 </div>
@@ -8,7 +8,7 @@
 <hr />
 
 ## 🎯 To Hiring Managers & Recruiters
-Welcome! This repository was specifically constructed to demonstrate advanced, hands-on proficiency in automotive testing methodologies critical to your product roadmap. 
+Welcome! This repository was specifically constructed to demonstrate advanced, hands-on proficiency in automotive testing methodologies critical to modern product roadmaps. 
 
 While operating expensive proprietary tools like Vector CANoe and VectorCAST is a standard industry requirement, this portfolio aims to demonstrate something much deeper: **a fundamental, architectural understanding of what those tools actually do under the hood**.
 
