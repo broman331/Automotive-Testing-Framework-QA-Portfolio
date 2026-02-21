@@ -5,7 +5,7 @@ class TransmitterECU:
     def __init__(self, key: bytes):
         self.crypto = SecOCEngine(key)
 
-    def secure_transmit(self, can_data: bytes) -> dict:
+    def secure_transmit(self, message_id: int, can_data: bytes, mac_length: int = 4) -> dict:
         """
         Simulates securing a CAN PDU. 
         Returns a dictionary representing the CAN frame construction.
@@ -14,14 +14,16 @@ class TransmitterECU:
         self.crypto.increment_freshness()
         fv = self.crypto.get_freshness_value()
         
-        # Generate truncated 4-byte MAC
-        mac = self.crypto.generate_mac(can_data, fv, mac_length=4)
+        # Generate truncated MAC natively bound to the CAN ID
+        mac = self.crypto.generate_mac(message_id, can_data, fv, mac_length=mac_length)
         
         # Construct the "Secured PDU"
         return {
+            "message_id": message_id,
             "payload": can_data,
             "freshness_value": fv, # Sent out of band, or truncated in the frame
-            "mac": mac
+            "mac": mac,
+            "mac_length": mac_length
         }
 
 class ReceiverECU:
@@ -34,11 +36,16 @@ class ReceiverECU:
         Validates an incoming PDU dictionary. 
         Raises exceptions strictly on failure.
         """
+        message_id = frame.get("message_id")
         payload = frame.get("payload")
         fv = frame.get("freshness_value")
         mac = frame.get("mac")
+        expected_mac_len = frame.get("mac_length", 4)
+
+        if len(mac) != expected_mac_len:
+            raise MacValidationError(f"MAC trunctation mismatch. Expected {expected_mac_len} bytes, got {len(mac)}")
         
-        # The crypto engine internally asserts Replay and MAC Logic
-        if self.crypto.verify_mac(payload, fv, mac):
+        # The crypto engine internally asserts Replay and MAC Logic bound to the CAN ID
+        if self.crypto.verify_mac(message_id, payload, fv, mac):
             self.received_messages.append(payload)
             return True

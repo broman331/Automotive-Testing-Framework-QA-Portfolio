@@ -29,14 +29,16 @@ class SecOCEngine:
         """Tick the FV counter. In real life, this is often synced by a master clock."""
         self.current_fv += 1
 
-    def generate_mac(self, data_payload: bytes, freshness_value: int, mac_length: int = 4) -> bytes:
+    def generate_mac(self, message_id: int, data_payload: bytes, freshness_value: int, mac_length: int = 4) -> bytes:
         """
         Simulates AES-CMAC by generating an HMAC-SHA256 signature over 
-        (Data + FreshnessValue) and trunking it to `mac_length` bytes.
+        (MessageID + Data + FreshnessValue) and trunking it to `mac_length` bytes.
         """
+        # Pack Message ID as a 16-bit big-endian integer (fits standard CAN IDs)
+        msg_id_bytes = struct.pack(">H", message_id)
         # Pack FV as a 32-bit big-endian integer
         fv_bytes = struct.pack(">I", freshness_value)
-        data_to_sign = data_payload + fv_bytes
+        data_to_sign = msg_id_bytes + data_payload + fv_bytes
         
         # Calculate full HMAC (Simulating CMAC)
         full_mac = hmac.new(self.secret_key, data_to_sign, hashlib.sha256).digest()
@@ -44,9 +46,9 @@ class SecOCEngine:
         # Truncate MAC (e.g. AUTOSAR profile 1 uses 3-4 byte MACs to fit in CAN frames)
         return full_mac[:mac_length]
 
-    def verify_mac(self, received_payload: bytes, received_fv: int, received_mac: bytes) -> bool:
+    def verify_mac(self, message_id: int, received_payload: bytes, received_fv: int, received_mac: bytes) -> bool:
         """
-        Verifies that the MAC matches the payload+FV combination.
+        Verifies that the MAC matches the message_id+payload+FV combination.
         Raises specific security exceptions on failure.
         """
         # 1. Check against Replay Attacks
@@ -54,7 +56,7 @@ class SecOCEngine:
              raise ReplayAttackError(f"Stale Freshness Value detected: {received_fv} <= {self.current_fv}")
         
         # 2. Verify MAC Cryptography
-        expected_mac = self.generate_mac(received_payload, received_fv, len(received_mac))
+        expected_mac = self.generate_mac(message_id, received_payload, received_fv, len(received_mac))
         if hmac.compare_digest(expected_mac, received_mac):
             # Valid! Sync the internal FV to the new valid one
             self.current_fv = received_fv

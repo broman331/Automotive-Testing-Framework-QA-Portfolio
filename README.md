@@ -146,3 +146,5 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **MAC Validation**: The Pytest framework asserts perfectly secured payloads are digested appropriately by native AES-CMAC algorithmic hashing. 
   * **MITM Detection**: Emulating a Man-In-The-Middle bit flip mutates the payload data, which accurately forces the Receiver to explicitly raise a `MacValidationError` drop logic.
   * **Replay Attacks**: A perfectly recorded original CAN frame injected back onto the network is successfully trapped and destroyed natively with a `ReplayAttackError` due to Stale Freshness Value checking.
+  * **CAN ID Binding**: Asserts that migrating a valid `Payload` + `MAC` packet to a mismatched Message ID immediately fails, proving the MAC is strongly authenticated against its absolute network context.
+  * **Truncated Lengths**: Validates that the system safely processes arbitrary truncation lengths against expected cutoffs (e.g. 2-byte vs 4-byte profiles).
