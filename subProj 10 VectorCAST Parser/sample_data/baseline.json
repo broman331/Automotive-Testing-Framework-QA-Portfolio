@@ -1,0 +1,14 @@
+{
+    "execution": {
+        "passed": 60,
+        "failed": 2,
+        "total": 62,
+        "pass_rate_percentage": 96.77
+    },
+    "coverage": {
+        "statement_coverage_percentage": 93.00,
+        "branch_coverage_percentage": 91.00,
+        "mcdc_coverage_percentage": 85.00
+    },
+    "errors": []
+}

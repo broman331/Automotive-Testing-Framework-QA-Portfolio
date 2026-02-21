@@ -70,7 +70,32 @@ class VectorCastParser:
         for file in xml_files:
             self.parse_file(file)
 
-    def generate_json_report(self, output_path: str = None) -> dict:
+    def compute_deltas(self, current_report: dict, baseline_path: str) -> dict:
+        """Compares current execution metrics against a historical baseline."""
+        try:
+            with open(baseline_path, 'r') as f:
+                baseline = json.load(f)
+                
+            deltas = {
+                "execution": {
+                    "passed_delta": current_report["execution"]["passed"] - baseline["execution"]["passed"],
+                    "failed_delta": current_report["execution"]["failed"] - baseline["execution"]["failed"],
+                    "pass_rate_delta": round(current_report["execution"]["pass_rate_percentage"] - baseline["execution"]["pass_rate_percentage"], 2)
+                },
+                "coverage": {
+                    "statement_delta": round(current_report["coverage"]["statement_coverage_percentage"] - baseline["coverage"]["statement_coverage_percentage"], 2),
+                    "branch_delta": round(current_report["coverage"]["branch_coverage_percentage"] - baseline["coverage"]["branch_coverage_percentage"], 2),
+                    "mcdc_delta": round(current_report["coverage"]["mcdc_coverage_percentage"] - baseline["coverage"]["mcdc_coverage_percentage"], 2)
+                }
+            }
+            return deltas
+        except FileNotFoundError:
+            return None # No baseline to compare against
+        except Exception as e:
+            self.metrics["errors"].append(f"Delta computation error: {str(e)}")
+            return None
+
+    def generate_json_report(self, output_path: str = None, baseline_path: str = None) -> dict:
         """Calculates final averages and returns a clean JSON structure."""
         report = {
             "execution": {
@@ -107,13 +132,94 @@ class VectorCastParser:
                 (cov["mcdc_achieved_sum"] / cov["mcdc_total_sum"]) * 100, 2
             )
 
+        if baseline_path:
+            report["deltas"] = self.compute_deltas(report, baseline_path)
+
         if output_path:
             with open(output_path, 'w') as f:
                 json.dump(report, f, indent=4)
                 
         return report
 
+    def generate_html_report(self, report_json: dict, output_path: str = "index.html"):
+        """Generates a developer-friendly HTML dashboard from the aggregated JSON math."""
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>VectorCAST CI/CD Dashboard</title>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }}
+                h1 {{ color: #2c3e50; }}
+                .container {{ display: flex; gap: 20px; }}
+                .card {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }}
+                .metric {{ font-size: 24px; font-weight: bold; margin-top: 10px; }}
+                .delta.pos {{ color: #27ae60; font-size: 14px; margin-left: 10px; }}
+                .delta.neg {{ color: #c0392b; font-size: 14px; margin-left: 10px; }}
+                .error {{ color: #c0392b; padding: 10px; border-left: 4px solid #c0392b; background: #fdf5f5; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <h1>VectorCAST Coverage & Execution Dashboard</h1>
+            
+            <div class="container">
+                <div class="card">
+                    <h3>Execution Overview</h3>
+                    <div class="metric">Passed: {report_json['execution']['passed']}</div>
+                    <div class="metric">Failed: {report_json['execution']['failed']}</div>
+                    <div class="metric">Pass Rate: {report_json['execution']['pass_rate_percentage']}%</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Structural Coverage</h3>
+                    <div class="metric">Statement: {report_json['coverage']['statement_coverage_percentage']}%</div>
+                    <div class="metric">Branch: {report_json['coverage']['branch_coverage_percentage']}%</div>
+                    <div class="metric">MC/DC: {report_json['coverage']['mcdc_coverage_percentage']}%</div>
+                </div>
+            </div>
+        """
+        
+        if report_json.get("deltas"):
+            deltas = report_json["deltas"]
+            # Formatting helpers
+            sc_c = "pos" if deltas["coverage"]["statement_delta"] >= 0 else "neg"
+            br_c = "pos" if deltas["coverage"]["branch_delta"] >= 0 else "neg"
+            
+            html_content += f"""
+            <h2 style="margin-top: 40px;">Historical Pipeline Drift (vs Baseline)</h2>
+            <div class="container">
+                <div class="card">
+                    <h3>Execution Deltas</h3>
+                    <p>New Passed Tests: <span class="delta {sc_c}">{deltas['execution']['passed_delta']:+}</span></p>
+                    <p>New Failing Tests: <span class="delta {br_c}">{deltas['execution']['failed_delta']:+}</span></p>
+                </div>
+                <div class="card">
+                    <h3>Coverage Deltas</h3>
+                    <p>Statement Range: <span class="delta {sc_c}">{deltas['coverage']['statement_delta']:+}%</span></p>
+                    <p>Branch Math: <span class="delta {br_c}">{deltas['coverage']['branch_delta']:+}%</span></p>
+                </div>
+            </div>
+            """
+            
+        if report_json["errors"]:
+            html_content += """<h2 style="margin-top: 40px;">Parser Faults</h2>"""
+            for err in report_json["errors"]:
+                html_content += f"""<div class="error">{err}</div>"""
+                
+        html_content += """
+        </body>
+        </html>
+        """
+        
+        with open(output_path, 'w') as f:
+            f.write(html_content)
+        return True
+
 if __name__ == "__main__":
     parser = VectorCastParser()
     parser.parse_directory("sample_data")
-    print(json.dumps(parser.generate_json_report(), indent=4))
+    report = parser.generate_json_report(baseline_path="sample_data/baseline.json")
+    parser.generate_html_report(report, "index.html")
+    print(json.dumps(report, indent=4))
+    print("Exported dashboard to index.html")

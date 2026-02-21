@@ -63,3 +63,40 @@ def test_1004_malformed_xml_resilience():
     # AND we should have gracefully caught 1 error
     assert len(report["errors"]) == 1
     assert "corrupted.xml" in report["errors"][0]
+
+def test_1005_historical_delta_calculation():
+    """TC-1005: Assert pipeline calculates mathematical drift against historical baselines."""
+    parser = VectorCastParser()
+    parser.parse_directory(SAMPLE_DIR)
+    
+    # Generate report supplying the baseline
+    report = parser.generate_json_report(baseline_path=os.path.join(SAMPLE_DIR, "baseline.json"))
+    
+    assert "deltas" in report
+    
+    # math check:
+    # new passed: 63. baseline passed: 60. delta = +3
+    assert report["deltas"]["execution"]["passed_delta"] == 3
+    # new statement cov: 97.75. baseline: 93.00. delta = +4.75
+    assert report["deltas"]["coverage"]["statement_delta"] == 4.75
+
+def test_1006_automated_html_rendering(tmp_path):
+    """TC-1006: Assert parser builds the index.html string structure utilizing the dict natively."""
+    parser = VectorCastParser()
+    parser.parse_directory(SAMPLE_DIR)
+    
+    # Export it to a temporary pytest isolated directory
+    report = parser.generate_json_report(baseline_path=os.path.join(SAMPLE_DIR, "baseline.json"))
+    out_file = tmp_path / "dashboard.html"
+    
+    res = parser.generate_html_report(report_json=report, output_path=str(out_file))
+    
+    assert res == True
+    assert out_file.exists()
+    
+    html_text = out_file.read_text()
+    assert "VectorCAST Coverage & Execution Dashboard" in html_text
+    # Should flag our error string inside the HTML document
+    assert "corrupted.xml" in html_text
+    # Should insert our math positive/negative tracking numbers
+    assert "+4.75%" in html_text

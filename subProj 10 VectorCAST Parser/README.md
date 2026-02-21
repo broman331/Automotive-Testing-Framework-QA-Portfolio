@@ -7,9 +7,9 @@ This toolkit serves as an automated abstraction layer. It sweeps target director
 
 ## Architecture
 
-1. **`sample_data/`**: A mock repository populated by standard VectorCAST execution and coverage payload exports. Includes `exec_results.xml`, `coverage_results.xml`, and maliciously corrupted `corrupted.xml` strings.
-2. **`parser.py`**: A python script utilizing the native `xml.etree.ElementTree` to parse nodes, compute fractional percentages, and generate a final aggregated JSON.
-3. **`tests/test_parser.py`**: A `pytest` suite simulating CI execution.
+1. **`sample_data/`**: A mock repository populated by standard VectorCAST execution and coverage payload exports. Includes `exec_results.xml`, `coverage_results.xml`, maliciously corrupted `corrupted.xml` strings, and a historical `baseline.json`.
+2. **`parser.py`**: A python script utilizing the native `xml.etree.ElementTree` to parse nodes, compute fractional percentages, calculate drift deltas against prior baselines, and dynamically construct a graphical HTML status dashboard.
+3. **`tests/test_parser.py`**: A `pytest` suite simulating CI execution and mathematical validations.
 
 ## Test Coverage
 The automated Pytest execution asserts:
@@ -17,6 +17,8 @@ The automated Pytest execution asserts:
 * **TC-1002 Parse Coverage Metrics**: Asserts fractional percentage summation of structural coverage nodes.
 * **TC-1003 Multi-File Aggregation**: Points the engine at the entire directory and asserts multi-file processing sums mathematically.
 * **TC-1004 Malformed XML Resilience**: Points the engine at the corrupted XML file to guarantee the `ET.ParseError` is trapped cleanly, appended to an `"errors"` list in the final JSON, and that the Python process remains alive to finish processing subsequent valid files.
+* **TC-1005 Historical Delta Calculation**: Validates the mathematical precision matching the current execution XMLs against the legacy `baseline.json` file to surface positive or negative pipeline drift metrics.
+* **TC-1006 Automated HTML Rendering**: Generates a temporary `index.html` mapping the Python dictionary natively into the CSS wrapper.
 
 ## Docker & Automation
 Tests are fully containerized using Docker and executed automatically via the `.github/workflows/ci_subproj10.yml` pipeline.
