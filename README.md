@@ -129,24 +129,19 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 11-12)
-
 #### 11. Automotive Ethernet (SOME/IP) Protocol Tester
-* **Focus**: Modern Infotainment/Zonal Architectures
-* **What it will do**: Send structured SOME/IP (Scalable service-Oriented MiddlewarE over IP) payloads over UDP.
-* **Testing**: Assert dynamic Service Discovery (SD) and Publish/Subscribe pattern event listeners over a mock high-speed automotive network.
+* **Focus**: Modern Infotainment/Zonal Architectures directly mirroring Python UDP sockets.
+* **What it does**: Simulates the standard Publish/Subscribe structures of Scalable service-Oriented MiddlewarE over IP (SOME/IP), which functionally replaces CAN logic for high-speed sensor streams.
+* **Testing Focus**:
+  * **Service Discovery (SD)**: The testing client asynchronously monitors UDP multicasts to actively trap `OfferService` broadcasts emitting from mock ECUs.
+  * **Eventgroup Subscriptions**: The pipeline constructs specific 16-byte SOME/IP header structs (`MessageID`, `RequestID`, `Protocol Version`, `Return Code = 0x00`) to execute native event subscriptions.
+  * **Notification Decoding**: Asserts the active `socket.recvfrom` data streams unpacking directly into standard mathematical floating-point structures to simulate telemetry validation.
 
-#### 10. IVI (In-Vehicle Infotainment) E2E UI Automation
-* **Focus**: Frontend UI / Appium
-* **What it will do**: Use Appium/Selenium framework patterns adapted for automotive touch displays.
-* **Testing**: Automated layout detection, touch boundary testing, and assertion of visual layout elements for Qt/Android Automotive infotainment screens.
+---
 
-#### 11. OTA (Over-The-Air) Delta Payload Validator
-* **Focus**: Device Management & Telemetry
-* **What it will do**: Simulate fetching compressed differential software updates from a cloud server down to an edge ECU.
-* **Testing**: Assert the cryptographic signature validation of the mock binary blob, ensuring the module rejects unsigned/corrupted firmware downloads.
+### 🚧 Future Pipeline (Sub-Project 12)
 
-#### 12. ASPICE Traceability Dashboard
-* **Focus**: Process Improvement (V-Model) 
-* **What it will do**: A lightweight React/Vite dashboard connecting to a mock Jira/Requirement database.
-* **Testing**: Parses the `pytest` output XML/JSON metadata gathered from all 11 previous subprojects to map executed code tests directly to written user requirements, outputting a fully conformant Requirement Traceability Matrix (RTM).
+#### 12. Secure Onboard Communication (SecOC) Mock
+* **Focus**: Automotive Cyber Security
+* **What it will do**: Simulate message authentication (MAC) generation and validation over a mock CAN network.
+* **Testing**: Assert that the receiver rejects messages with missing or invalid MACs (e.g. fuzzing the Freshness Value or truncation), preventing malicious replay attacks on the mock CAN bus.
