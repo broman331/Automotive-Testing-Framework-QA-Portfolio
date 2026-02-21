@@ -1,0 +1,28 @@
+name: subProj 12 SecOC Mock
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'subProj 12 SecOC Mock/**'
+      - '.github/workflows/ci_subproj12.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'subProj 12 SecOC Mock/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker Image
+      run: |
+        cd "subProj 12 SecOC Mock"
+        docker build -t subproj12_pipeline .
+        
+    - name: Run Pytest in Container
+      run: |
+        docker run --rm subproj12_pipeline

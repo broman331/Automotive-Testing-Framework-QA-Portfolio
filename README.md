@@ -139,11 +139,10 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **Subscription Teardown**: Validates the transmission of `StopSubscribeEventgroup` packets to explicitly detach active connections and immediately silence cyclic payload streams from the server.
   * **Protocol Handshaking**: Asserts that explicitly spoofing mismatched versions (e.g. `Protocol Version 0x02` instead of `0x01`) allows the server to silently drop unsupported noise architectures without crashing the asynchronous listener loop.
 
----
-
-### 🚧 Future Pipeline (Sub-Project 12)
-
 #### 12. Secure Onboard Communication (SecOC) Mock
 * **Focus**: Automotive Cyber Security
-* **What it will do**: Simulate message authentication (MAC) generation and validation over a mock CAN network.
-* **Testing**: Assert that the receiver rejects messages with missing or invalid MACs (e.g. fuzzing the Freshness Value or truncation), preventing malicious replay attacks on the mock CAN bus.
+* **What it does**: Simulates message authentication (MAC) generation and validation over a mock CAN network.
+* **Testing Focus**:
+  * **MAC Validation**: The Pytest framework asserts perfectly secured payloads are digested appropriately by native AES-CMAC algorithmic hashing. 
+  * **MITM Detection**: Emulating a Man-In-The-Middle bit flip mutates the payload data, which accurately forces the Receiver to explicitly raise a `MacValidationError` drop logic.
+  * **Replay Attacks**: A perfectly recorded original CAN frame injected back onto the network is successfully trapped and destroyed natively with a `ReplayAttackError` due to Stale Freshness Value checking.
