@@ -56,14 +56,17 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **Negative Response Code (NRC) Fuzzing**: Artificially corrupting payload lengths (e.g., dropping bytes on `0x22`) or calling strictly secured SIDs out-of-order to assert the ECU correctly drops the frame and broadcasts the required ISO compliant fallback NRC (e.g., `0x13` Incorrect Length, `0x24` Request Sequence Error, `0x33` Security Access Denied).
   * **Dockerization & CI/CD Validation**: Implemented an automated GitHub Actions pipeline spinning up the virtual sub-framework and asserting negative response compliance logic perfectly across all targeted boundaries.
 
+#### 4. CAPL-to-Python Converter
+* **Domain:** Abstract Syntax Trees (AST) & Lexical Transpilation
+* **What it does:** An automated build tool architected to ingest proprietary Vector CANoe `CAPL` scripts (`.can`) and logically decouple the logic into entirely open-source `python-can` code.
+* **Testing Focus:** 
+  * C-like Variable and Method extraction (`setTimer()`, `write()`, `output()`).
+  * Converting CAPL's single-threaded, proprietary event-blocks (`on start`, `on timer`) into POSIX-compliant python daemon `Threads` wrapping infinite sleep schedules.
+  * An automated `pytest` suite simulating live CAN execution against the generated Python strings.
+
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 4-12)
-
-#### 4. CAPL Scripting Equivalency Node (Remaining Bus Simulation)
-* **Focus**: Network Topologies
-* **What it will do**: Provide an open-source, Python-based equivalent to Vector's CAPL language.
-* **Testing**: Load `.dbc` (CAN database) files and automatically parse network topologies to spin up mock ECUs simulating the "rest of the bus" around a System Under Test (SUT).
+### 🚧 Future Pipeline (Sub-Projects 5-12)
 
 #### 5. CI/CD Automotive Validation Pipeline
 * **Focus**: DevOps & Continuous Integration
