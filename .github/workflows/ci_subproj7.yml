@@ -1,0 +1,36 @@
+name: CI - subProj 7 AUTOSAR NM State Machine
+
+on:
+  push:
+    paths:
+      - 'subProj 7 OSEK AUTOSAR NM/**'
+      - '.github/workflows/ci_subproj7.yml'
+  pull_request:
+    paths:
+      - 'subProj 7 OSEK AUTOSAR NM/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        working-directory: './subProj 7 OSEK AUTOSAR NM'
+        run: docker build -t subproj7_pipeline .
+
+      - name: Run Pytest Pytest inside Docker
+        working-directory: './subProj 7 OSEK AUTOSAR NM'
+        run: docker run --name subproj7_runner subproj7_pipeline
+
+      - name: Extract Test Report
+        if: always()
+        run: docker cp subproj7_runner:/app/report.html "./subProj 7 OSEK AUTOSAR NM/report.html"
+
+      - name: Upload Test Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SubProj7-AUTOSAR-NM-TestReport
+          path: './subProj 7 OSEK AUTOSAR NM/report.html'

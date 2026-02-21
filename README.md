@@ -85,12 +85,16 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 ---
 
-### 🚧 Future Pipeline (Sub-Projects 7-12)
-
 #### 7. OSEK/AUTOSAR NM State Machine Execution
-* **Focus**: AUTOSAR Network Management
-* **What it will do**: Expand the basic Sleep/Wake commands of SubProj 1 into a full AUTOSAR logical ring topology.
-* **Testing**: Validating transition state graphs (Bus-Sleep -> Prepare-Bus-Sleep -> Network-Mode -> Repeat) ensuring nodes don't drop off the logical ring synchronously.
+* **Domain**: Software Standards, Power Management, State Machine Testing.
+* **What it does**: Implements the strict 5-state AUTOSAR/OSEK Network Management protocol (`Bus-Sleep` -> `Repeat-Message` -> `Normal-Operation` -> `Ready-Sleep` -> `Prepare-Bus-Sleep`). Simulates a virtual multi-node ring over CAN to demonstrate how ECUs collaboratively decide to sleep (saving the 12V battery) or wake up synchronously.
+* **Testing Focus**:
+  * **Network Synchronization**: `pytest` asserts that broadcasting a keep-alive from one node correctly pulls all other sleeping nodes into the `Repeat-Message` state.
+  * **Coordinated Shutdown**: Automated timing tests ensuring the global transition to `Prepare-Bus-Sleep` only occurs when *all* simulated nodes fall silent.
+
+---
+
+### 🚧 Future Pipeline (Sub-Projects 8-12)
 
 #### 8. ISO 26262 Fault Injection Framework (Failure Modes)
 * **Focus**: Hardware Fault Defect Simulation
