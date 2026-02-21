@@ -1,0 +1,28 @@
+name: subProj 11 SOME/IP Tester
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'subProj 11 SOMEIP Tester/**'
+      - '.github/workflows/ci_subproj11.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'subProj 11 SOMEIP Tester/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker Image
+      run: |
+        cd "subProj 11 SOMEIP Tester"
+        docker build -t subproj11_pipeline .
+        
+    - name: Run Pytest in Container
+      run: |
+        docker run --rm subproj11_pipeline
