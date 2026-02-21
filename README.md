@@ -8,14 +8,17 @@
 <hr />
 
 ## 🎯 To Hiring Managers & Recruiters
-Welcome! This repository was specifically constructed to demonstrate advanced, hands-on proficiency in automotive testing methodologies critical to modern product roadmaps. 
+Welcome! This repository was exclusively engineered to demonstrate advanced, hands-on architectural proficiency across the entire automotive Software Testing Life Cycle (STLC). 
 
-While operating expensive proprietary tools like Vector CANoe and VectorCAST is a standard industry requirement, this portfolio aims to demonstrate something much deeper: **a fundamental, architectural understanding of what those tools actually do under the hood**.
+While operating expensive proprietary GUI tools (e.g., Vector CANoe, VectorCAST) is a standard industry requirement, relying solely on commercial software creates black-box testing limitations. This portfolio breaks out of that box to demonstrate something much deeper: **a fundamental, ground-up understanding of what those proprietary tools actually execute under the hood**.
 
-By recreating Remaining Bus Simulation, ASPICE traceability matrices, Fuzzing algorithms, and ISO 26262 functional safety metrics entirely through **custom Python and C++ test harnesses**, this repository proves an ability to:
-1. Engineer bespoke automated test solutions for any ECU network.
-2. Assert strict structural coverage (`gcov`/`MC/DC`) and memory safety (`Valgrind`).
-3. Maintain zero-compromise CI/CD pipelines compliant with automotive safety standards.
+By recreating Remaining Bus Simulation (RBS), ASPICE traceability engines, continuous ISO 26262 functional safety metrics, and native cryptographic validations entirely through **custom Python and C++ test harnesses**, this repository provides concrete proof of the ability to:
+1. **Engineer Bespoke Test Automation**: Architect scalable Software-in-the-Loop (SiL) and Hardware-in-the-Loop (HiL) simulations capable of injecting Babbling Idiot faults, routing UDS Diagnostic Fuzzing, and intercepting direct AUTOSAR Network Management state machines without relying on expensive vendor lock-ins.
+2. **Drive Automotive Cyber Security**: Autonomously implement and validate critical communication protocols like **SOME/IP** Service Discovery and **SecOC** AES-CMAC cryptographic hashing, explicitly trapping Man-In-The-Middle and Replay attacks.
+3. **Assert Code & Memory Safety**: Programmatically enforce strict structural code coverage (`gcov`/`MC/DC`) and memory footprint validation (`Valgrind`) against unmanaged C++ algorithms natively within the pipeline.
+4. **Maintain Zero-Compromise CI/CD**: Seamlessly integrate complex hardware-protocol suites into automated, containerized **Docker** environments, executing massively parallel testing via GitHub Actions to block vehicular software regressions instantaneously.
+
+Explore the 12 independent sub-projects below to view the source code, Pytest orchestrations, and CI pipeline architectures powering this framework.
 
 ---
 
