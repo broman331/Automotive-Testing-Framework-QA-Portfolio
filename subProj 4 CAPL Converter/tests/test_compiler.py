@@ -47,6 +47,17 @@ class TestCAPLCompiler:
         res = transpiler.translate_syntax('output(msg_engine)')
         assert res == 'self.bus.send(msg_engine)'
 
+    def test_rx_event_parsing(self, transpiler):
+        """TC-406 - Validate on message extraction creates python listener handlers."""
+        transpiler.extract_blocks()
+        assert 0x200 in transpiler.on_message
+        assert len(transpiler.on_message[0x200]) > 0
+        
+    def test_unsupported_error_handling(self, transpiler):
+        """TC-407 - Assert ValueError when parsing proprietary CAPL keywords like testWaitForMessage"""
+        with pytest.raises(ValueError):
+            transpiler.translate_syntax('testWaitForMessage(0x100, 500)')
+
     # ----------------------------------------------------
     # PART 2: End-to-End Compilation and Live Execution
     # ----------------------------------------------------
@@ -99,3 +110,27 @@ class TestCAPLCompiler:
             
         # At 20ms polling over 100ms, we expect roughly ~4-5 messages
         assert msgs_received >= 3
+
+    def test_live_rx_hook(self, capsys):
+        """TC-408 - Validate dynamically created Listener fires correctly on mock Rx."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("engine_node_compiled", PY_OUT_FILE)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        
+        node = module.CAPLNode(channel='test_rx_bus')
+        node.start()
+        
+        # Inject an injected message into the bus exactly as if another ECU was sending it
+        monitor_bus = can.Bus(channel='test_rx_bus', interface='virtual')
+        msg = can.Message(arbitration_id=0x200, data=[], is_extended_id=False)
+        monitor_bus.send(msg)
+        
+        # Yield to thread
+        time.sleep(0.1)
+        node.stop()
+        monitor_bus.shutdown()
+        
+        # Check standard out for the CAPL 'write()' statement translating and firing on Rx
+        captured = capsys.readouterr()
+        assert "Received 0x200 message!" in captured.out

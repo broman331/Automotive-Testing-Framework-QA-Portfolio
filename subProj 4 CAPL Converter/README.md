@@ -10,7 +10,8 @@ The included transpiler utilizes complex Regular Expressions (RegEx) to tokenize
 1. **Variables (`message`, `msTimer`)**: Automates `can.Message` class instantiation.
 2. **`on start {}` Blocks**: Generates Python threading logic to boot equivalent timers.
 3. **`on timer {}` Blocks**: Translates isolated CAPL timer code into indefinite Python `while True:` daemon threads.
-4. **Syntax Maps**: Direct C-like language mapping:
+4. **`on message {}` Blocks**: Interprets Rx block hooks utilizing `can.Listener.on_message_received` handlers.
+5. **Syntax Maps**: Direct C-like language mapping:
    - `write("str");` 👉 `print("str")`
    - `msg.byte(0) = 0xAA;` 👉 `msg.data[0] = 0xAA`
    - `output(msg);` 👉 `self.bus.send(msg)`
@@ -19,8 +20,10 @@ The included transpiler utilizes complex Regular Expressions (RegEx) to tokenize
 The enclosed `pytest` suite does not just unit-test the RegEx. It performs an **end-to-end execution validation**:
 1. It reads the mock `tests/engine_node.can`.
 2. Compiles it to `tests/engine_node_compiled.py`.
-3. Verifies the runtime Python Abstract Syntax Tree (AST) does not throw `SyntaxError`s.
-4. Dynamically imports the compiled script, spins it up over a `virtual` Linux CAN bus, and asserts that the node is accurately transmitting the translated bytecode.
+3. Verifies Error Handling assertions natively flag proprietary CAPL functions (e.g. `testWaitForMessage`) via `ValueError`.
+4. Verifies the runtime Python Abstract Syntax Tree (AST) does not throw `SyntaxError`s.
+5. Dynamically imports the compiled script, spins it up over a `virtual` Linux CAN bus, and asserts that the node is accurately transmitting the translated bytecode.
+6. A live Rx End-to-End assertion injects a `0x200` frame to ensure the translated `on message` hook successfully catches the traffic.
 
 ## Setup & Execution
 

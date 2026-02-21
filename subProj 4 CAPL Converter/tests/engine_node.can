@@ -18,3 +18,7 @@ on timer myTimer {
   /* Reset timer for cyclical transmission */
   setTimer(myTimer, 20);
 }
+
+on message 0x200 {
+  write("Received 0x200 message!");
+}

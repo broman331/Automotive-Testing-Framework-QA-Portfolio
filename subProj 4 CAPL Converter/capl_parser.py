@@ -15,6 +15,7 @@ class CAPLParser:
         self.timers = []
         self.on_start = []
         self.on_timer = {}
+        self.on_message = {}
 
     def extract_blocks(self):
         """Uses Regex to strip comments and extract logical execution blocks."""
@@ -44,8 +45,17 @@ class CAPLParser:
             if timer_match:
                 self.on_timer[timer] = [line.strip() for line in timer_match.group(1).strip().split(';') if line.strip()]
 
+        # 4. Extract on message blocks
+        for msg_match in re.finditer(r'on message\s+(0x[0-9A-Fa-f]+|\d+)\s*\{([^}]*)\}', clean_content, re.DOTALL):
+            msg_id_val = int(msg_match.group(1), 16) if '0x' in msg_match.group(1).lower() else int(msg_match.group(1))
+            self.on_message[msg_id_val] = [line.strip() for line in msg_match.group(2).strip().split(';') if line.strip()]
+
     def translate_syntax(self, line):
         """Translates single CAPL C-like statements into Python syntax."""
+        # Unsupported Proprietary Error Handling
+        if "testWaitForMessage" in line:
+            raise ValueError(f"Unsupported proprietary CAPL keyword found: {line}")
+            
         # Translate CAPL writes -> Python prints (with logging capability)
         line = re.sub(r'write\("([^"]+)"\)', r'print("\1")', line)
         
@@ -68,7 +78,7 @@ class CAPLParser:
             "import threading",
             "import can",
             "",
-            "class CAPLNode:",
+            "class CAPLNode(can.Listener):",
             "    def __init__(self, channel='vcan0'):",
             "        self.bus = can.interface.Bus(channel=channel, interface='virtual')",
             "        self.running = False",
@@ -86,6 +96,7 @@ class CAPLParser:
         # Create start function mapping 'on start'
         lines.append("    def start(self):")
         lines.append("        self.running = True")
+        lines.append("        self.notifier = can.Notifier(self.bus, [self])")
         for line in self.on_start:
             translated = self.translate_syntax(line)
             lines.append(f"        {translated}")
@@ -113,8 +124,25 @@ class CAPLParser:
                 lines.append(f"            {translated}")
             lines.append("")
             
+        # Map on message (Rx handlers)
+        lines.append("    def on_message_received(self, msg):")
+        if not self.on_message:
+            lines.append("        pass")
+        else:
+            for msg_id, block in self.on_message.items():
+                lines.append(f"        if msg.arbitration_id == {msg_id}:")
+                for line in block:
+                    for msg_name in self.variables.keys():
+                        line = re.sub(rf'\b{msg_name}\b', f'self.{msg_name}', line)
+                    translated = self.translate_syntax(line)
+                    lines.append(f"            {translated}")
+        
+        lines.append("")
+
         lines.append("    def stop(self):")
+        lines.append("        if not self.running: return")
         lines.append("        self.running = False")
+        lines.append("        if hasattr(self, 'notifier'): self.notifier.stop()")
         lines.append("        for t in self.threads:")
         lines.append("            t.join()")
         lines.append("        self.bus.shutdown()")
