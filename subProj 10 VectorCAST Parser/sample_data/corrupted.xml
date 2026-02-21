@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vectorcast>
+    <execution_report>
+        <test_suite name="MalformedSuite">
+            <test_cases passed="10" failed="1" total="11" <!-- forgot closing tag -->
+        </test_suite>
+</vectorcast>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vectorcast>
+    <coverage_report>
+        <module name="EngineController.cpp">
+            <statement_coverage achieved="95.5" total="100.0"/>
+            <branch_coverage achieved="88.2" total="100.0"/>
+            <mcdc_coverage achieved="82.1" total="100.0"/>
+        </module>
+        <module name="TransmissionController.cpp">
+            <statement_coverage achieved="100.0" total="100.0"/>
+            <branch_coverage achieved="98.0" total="100.0"/>
+            <mcdc_coverage achieved="95.0" total="100.0"/>
+        </module>
+    </coverage_report>
+</vectorcast>

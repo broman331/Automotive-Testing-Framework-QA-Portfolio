@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Testing
+.pytest_cache/
+report.html
+consolidated_report.json

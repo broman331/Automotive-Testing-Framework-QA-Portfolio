@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vectorcast>
+    <execution_report>
+        <test_suite name="EngineController">
+            <test_cases passed="45" failed="2" total="47"/>
+        </test_suite>
+        <test_suite name="TransmissionController">
+            <test_cases passed="18" failed="0" total="18"/>
+        </test_suite>
+    </execution_report>
+</vectorcast>
