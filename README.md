@@ -61,7 +61,8 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 * **What it does:** An automated build tool architected to ingest proprietary Vector CANoe `CAPL` scripts (`.can`) and logically decouple the logic into entirely open-source `python-can` code.
 * **Testing Focus:** 
   * C-like Variable and Method extraction (`setTimer()`, `write()`, `output()`).
-  * Converting CAPL's single-threaded, proprietary event-blocks (`on start`, `on timer`) into POSIX-compliant python daemon `Threads` wrapping infinite sleep schedules.
+  * Converting CAPL's single-threaded event-blocks (`on start`, `on timer`, `on message`) into POSIX-compliant python daemon `Threads` and `can.Listener` Rx hooks.
+  * **AST Error Handling**: Throwing explicit `ValueError` exceptions automatically when proprietary, non-translatable CAPL functions (like `testWaitForMessage`) are detected.
   * An automated `pytest` suite simulating live CAN execution against the generated Python strings.
   * **Dockerization & CI/CD Validation**: A GitHub Actions workflow builds a clean Docker abstraction testing the transpiler without polluting the host machine's Python packages.
 
