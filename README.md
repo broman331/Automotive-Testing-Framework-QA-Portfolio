@@ -71,7 +71,7 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 * **What it does**: A pure Python Traceability Engine bridging an automated CI/CD Pytest lifecycle against a formalized Mock Requirement Database (JSON).
 * **Testing Focus**:
   * **JUnit XML Parsing**: Built custom `conftest.py` hooks to inject `@pytest.mark.req("ID")` metadata natively into the generic `report.xml` output.
-  * **ASPICE Coverage Logic**: The `traceability_generator.py` script maps `Requirement ID` -> `Test Case ID` -> `Execution Results`, forcing explicit traceability.
+  * **ASPICE Coverage Logic**: The `traceability_generator.py` script maps `Requirement ID` -> `Test Case ID` -> `Execution Results`, forcing explicit traceability. It now intelligently handles 1-to-many, many-to-1, and orphans.
   * **One-to-Many Aggregation**: The generator aggregates multiple test conditions mapped to a single requirement identifier. If ANY child condition fails bounding checks, the parent requirement organically fails.
   * **Orphaned Test Detection**: The tool natively cross-references the XML logs against the formal JSON database, violently failing the pipeline if engineers define tests wrapped in unregistered specification markers.
   * **CI/CD Blockers**: An automated GitHub Actions pipeline builds the abstraction in Docker. The Traceability generator explicitly exits with code `1` and fails the pipeline if an engineer commits code that adds a requirement without linking a passing execution test case.
@@ -96,10 +96,13 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 ---
 
 #### 8. ISO 26262 Fault Injection Framework (Failure Modes)
-* **Domain**: Functional Safety, ISO 26262 Hardware Fault Modeling.
-* **What it does**: Simulates critical physical failures on the CAN bus using a Man-In-The-Middle (MITM) python proxy. Specifically injects: `DROP_ALL` (cut wires), `LATENCY` (CPU starvation), `CORRUPT_PAYLOAD` (Bit-flipping EMI), and `STALE_DATA` (frozen ADC sensors).
+* **Domain**: Functional Safety, ISO 26262 Hardware Fault Modeling & AUTOSAR E2E Profiles.
+* **What it does**: Simulates critical physical failures on the CAN bus using a Man-In-The-Middle (MITM) python proxy. Specifically injects: `DROP_ALL` (cut wires), `LATENCY` (CPU starvation), `CORRUPT_PAYLOAD` (Bit-flipping EMI), `STALE_DATA` (frozen ADC sensors), `CORRUPT_CRC` (E2E cryptographic corruption), and `DUPLICATE_FRAME` (Gateway replay loops).
 * **Testing Focus**:
   * **Safe State Evaluation**: Automated Pytest execution asserting that the target ECU correctly identifies the injected mathematical anomalies and safely degrades into predetermined `SafeState` enum modes (e.g. `TIMING_VIOLATION`, `IMPLAUSIBLE_SIGNAL`) rather than catastrophically failing.
+  * **AUTOSAR End-to-End (E2E) Profile 1 Validation**: 
+    * Sabotages CRC algorithm derivations mid-flight, verifying the payload drops and triggers an `E2E_CRC_ERROR`.
+    * Duplicates messages synchronously to mimic replay attacks, validating sequence counter protection blocks the data array and asserts an `E2E_SEQ_DUPLICATION`.
 
 ---
 
