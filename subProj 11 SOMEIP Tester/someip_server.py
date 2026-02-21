@@ -12,6 +12,7 @@ MSG_TYPE_NOTIFICATION = 0x02
 
 SERVICE_ID = 0x1234
 METHOD_SUBSCRIBE = 0x0001
+METHOD_STOPSUBSCRIBE = 0x0002
 EVENT_GPS = 0x8001
 EVENTGROUP_ID = 0x0001
 
@@ -78,25 +79,37 @@ class SomeipServer:
                 if len(data) >= 16:
                     header = struct.unpack("!IIIBBBB", data[:16])
                     msg_id = header[0]
+                    proto_v = header[3]
                     msg_type = header[5]
                     payload = data[16:]
+                    
+                    # Protocol Version Handshaking
+                    if proto_v != PROTOCOL_VERSION:
+                        continue # Silently drop malformed packets
                     
                     srv_id = (msg_id >> 16) & 0xFFFF
                     method_id = msg_id & 0xFFFF
                     
-                    if srv_id == SERVICE_ID and method_id == METHOD_SUBSCRIBE and msg_type == MSG_TYPE_REQUEST:
-                        # Extract eventgroup from payload
-                        if len(payload) >= 2:
-                            eg_id = struct.unpack("!H", payload[:2])[0]
-                            if eg_id == EVENTGROUP_ID:
-                                self.subscribers.add(addr)
-                                self._send_subscribe_ack(addr, header[2]) # header[2] is request_id
+                    if srv_id == SERVICE_ID and msg_type == MSG_TYPE_REQUEST:
+                        if method_id == METHOD_SUBSCRIBE:
+                            # Extract eventgroup from payload
+                            if len(payload) >= 2:
+                                eg_id = struct.unpack("!H", payload[:2])[0]
+                                if eg_id == EVENTGROUP_ID:
+                                    self.subscribers.add(addr)
+                                    self._send_subscribe_ack(addr, header[2]) # header[2] is request_id
+                                    
+                        elif method_id == METHOD_STOPSUBSCRIBE:
+                            # Teardown sequence
+                            if addr in self.subscribers:
+                                self.subscribers.remove(addr)
+                            self._send_subscribe_ack(addr, header[2], method=METHOD_STOPSUBSCRIBE)
             except Exception:
                 pass
                 
-    def _send_subscribe_ack(self, addr, request_id):
+    def _send_subscribe_ack(self, addr, request_id, method=METHOD_SUBSCRIBE):
         """Sends a SubscribeEventgroupAck response."""
-        msg_id = (SERVICE_ID << 16) | METHOD_SUBSCRIBE
+        msg_id = (SERVICE_ID << 16) | method
         payload = struct.pack("!H", EVENTGROUP_ID)
         length = 8 + len(payload)
         

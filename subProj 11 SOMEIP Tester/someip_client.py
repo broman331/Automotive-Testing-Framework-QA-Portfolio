@@ -67,6 +67,38 @@ class SomeipClient:
             pass
         return False
 
+    def stop_subscribe_eventgroup(self, server_ip, server_port, service_id, eventgroup_id) -> bool:
+        """Sends a StopSubscribeEventgroup Request and waits for the teardown Response."""
+        msg_id = (service_id << 16) | 0x0002 # 0x0002 is METHOD_STOPSUBSCRIBE
+        req_id = 0x01230002
+        
+        payload = struct.pack("!H", eventgroup_id)
+        length = 8 + len(payload)
+        
+        header = struct.pack("!IIIBBBB", msg_id, length, req_id, PROTOCOL_VERSION, INTERFACE_VERSION, MSG_TYPE_REQUEST, 0x00)
+        self.app_sock.sendto(header + payload, (server_ip, server_port))
+        
+        try:
+            data, _ = self.app_sock.recvfrom(1024)
+            if len(data) >= 16:
+                resp_header = struct.unpack("!IIIBBBB", data[:16])
+                if resp_header[5] == MSG_TYPE_RESPONSE and resp_header[6] == 0x00:
+                    return True
+        except socket.timeout:
+            pass
+        return False
+
+    def send_malformed_protocol(self, server_ip, server_port, service_id, eventgroup_id, bad_version=0x02):
+        """Sends a subscription request with an explicitly unsupported Protocol Version."""
+        msg_id = (service_id << 16) | 0x0001
+        req_id = 0x01230003
+        
+        payload = struct.pack("!H", eventgroup_id)
+        length = 8 + len(payload)
+        
+        header = struct.pack("!IIIBBBB", msg_id, length, req_id, bad_version, INTERFACE_VERSION, MSG_TYPE_REQUEST, 0x00)
+        self.app_sock.sendto(header + payload, (server_ip, server_port))
+
     def receive_notification(self, service_id, event_id):
         """Listens for a Notification message and parses the float payload."""
         try:

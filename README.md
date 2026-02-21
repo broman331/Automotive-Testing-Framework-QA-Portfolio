@@ -136,6 +136,8 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **Service Discovery (SD)**: The testing client asynchronously monitors UDP multicasts to actively trap `OfferService` broadcasts emitting from mock ECUs.
   * **Eventgroup Subscriptions**: The pipeline constructs specific 16-byte SOME/IP header structs (`MessageID`, `RequestID`, `Protocol Version`, `Return Code = 0x00`) to execute native event subscriptions.
   * **Notification Decoding**: Asserts the active `socket.recvfrom` data streams unpacking directly into standard mathematical floating-point structures to simulate telemetry validation.
+  * **Subscription Teardown**: Validates the transmission of `StopSubscribeEventgroup` packets to explicitly detach active connections and immediately silence cyclic payload streams from the server.
+  * **Protocol Handshaking**: Asserts that explicitly spoofing mismatched versions (e.g. `Protocol Version 0x02` instead of `0x01`) allows the server to silently drop unsupported noise architectures without crashing the asynchronous listener loop.
 
 ---
 

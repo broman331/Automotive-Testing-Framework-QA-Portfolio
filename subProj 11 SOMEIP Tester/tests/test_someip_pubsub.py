@@ -52,3 +52,31 @@ def test_1103_decode_active_notification_payloads(someip_server, someip_client):
     val2 = someip_client.receive_notification(SERVICE_ID, EVENT_ID)
     assert val2 is not None
     assert val2 > val1, "Server cyclic sequence failed to increment floating point correctly."
+
+def test_1104_stop_subscribe_eventgroup_lifecycle(someip_server, someip_client):
+    """TC-1104: Assert transmitting StopSubscribeEventgroup explicitly halts telemetry."""
+    # Send StopSubscribeEventgroup(0x1234, 0x0001)
+    success = someip_client.stop_subscribe_eventgroup(HOST, SERVER_PORT, SERVICE_ID, EVENTGROUP_ID)
+    assert success is True, "Server failed to ACK the StopSubscribe event."
+    
+    # Assert server removed the client's app socket address
+    assert len(someip_server.subscribers) == 0
+    
+    # Assert client no longer receives notifications
+    val3 = someip_client.receive_notification(SERVICE_ID, EVENT_ID)
+    assert val3 is None, "Client still receiving notifications after StopSubscribe."
+
+def test_1105_malformed_header_rejection(someip_server, someip_client):
+    """TC-1105: Assert that unsupported Protocol Versions are gracefully dropped."""
+    # Ensure client is unsubscribed
+    assert len(someip_server.subscribers) == 0
+    
+    # Transmit malformed Protocol Version 0x02
+    someip_client.send_malformed_protocol(HOST, SERVER_PORT, SERVICE_ID, EVENTGROUP_ID, bad_version=0x02)
+    
+    # Give server time to process
+    time.sleep(0.5)
+    
+    # Assert server rejected the payload and did not add the subscriber
+    assert len(someip_server.subscribers) == 0, "Server incorrectly processed a subscription with a malformed Protocol Version."
+
