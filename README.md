@@ -71,8 +71,10 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 * **What it does**: A pure Python Traceability Engine bridging an automated CI/CD Pytest lifecycle against a formalized Mock Requirement Database (JSON).
 * **Testing Focus**:
   * **JUnit XML Parsing**: Built custom `conftest.py` hooks to inject `@pytest.mark.req("ID")` metadata natively into the generic `report.xml` output.
-  * **ASPICE Coverage Logic**: The `traceability_generator.py` script maps `Requirement ID` -> `Test Case ID` -> `Execution Results`. It automatically generates a Markdown Traceability Matrix.
-  * **CI/CD Blockers**: An automated GitHub Actions pipeline builds the testing abstraction in Docker. The Traceability generator explicitly exits with code `1` and fails the pipeline if an engineer commits code that adds a requirement without linking a passing execution test case.
+  * **ASPICE Coverage Logic**: The `traceability_generator.py` script maps `Requirement ID` -> `Test Case ID` -> `Execution Results`, forcing explicit traceability.
+  * **One-to-Many Aggregation**: The generator aggregates multiple test conditions mapped to a single requirement identifier. If ANY child condition fails bounding checks, the parent requirement organically fails.
+  * **Orphaned Test Detection**: The tool natively cross-references the XML logs against the formal JSON database, violently failing the pipeline if engineers define tests wrapped in unregistered specification markers.
+  * **CI/CD Blockers**: An automated GitHub Actions pipeline builds the abstraction in Docker. The Traceability generator explicitly exits with code `1` and fails the pipeline if an engineer commits code that adds a requirement without linking a passing execution test case.
 
 ---
 
