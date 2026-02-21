@@ -7,7 +7,7 @@
 
 <hr />
 
-## 🎯 To Hiring Managers & Recruiters at Aegis Core Tech
+## 🎯 To Hiring Managers & Recruiters
 Welcome! This repository was specifically constructed to demonstrate advanced, hands-on proficiency in automotive testing methodologies critical to your product roadmap. 
 
 While operating expensive proprietary tools like Vector CANoe and VectorCAST is a standard industry requirement, this portfolio aims to demonstrate something much deeper: **a fundamental, architectural understanding of what those tools actually do under the hood**.
@@ -25,7 +25,7 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
 
 ### ✅ Completed Projects
 
-#### 1. Virtual CAN Bus Framework ([`subProj 1`](./subProj\ 1\ Virtual\ CAN\ Bus\ Framework))
+#### 1. Virtual CAN Bus Framework 
 * **Domain:** CAN Network Simulation & Validation
 * **What it does:** Recreates a Virtual CAN network mimicking a Hardware-in-the-Loop (HiL) setup. Features a multithreaded Mock ECU broadcasting Engine RPM/Speed signals over the `vcan` interface.
 * **Testing Focus:** 
@@ -36,7 +36,7 @@ Below is the roadmap of the 12 standalone automotive validation frameworks conta
   * **Babbling Idiot Fuzzing**: Asserts correct failure detection when defective nodes saturate the bus with 1,000+ frames per second.
   * **ASPICE SYS.4 Traceability**: Direct logical linking between test functions (`@pytest.mark.req`) and system requirements for automated Traceability Matrices.
 
-#### 2. Automated ADAS AEB SiL Tester ([`subProj 2`](./subProj\ 2\ Automated\ ADAS\ AEB\ SiL\ Tester))
+#### 2. Automated ADAS AEB SiL Tester 
 * **Domain:** C++ Software-in-the-Loop (SiL) & Functional Safety 
 * **What it does:** A lightweight, safety-critical Autonomous Emergency Braking (AEB) algorithm written in unmanaged C++, compiled to a shared library, and tested directly via Python `ctypes` wrappers. 
 * **Testing Focus:**
