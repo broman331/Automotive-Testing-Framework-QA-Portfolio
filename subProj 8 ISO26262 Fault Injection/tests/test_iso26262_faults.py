@@ -11,14 +11,17 @@ class VirtualHardwareSimulator:
         
     def send_sensor_data(self, speed_kph: int, sequence_number: int):
         """Simulate a raw sensor reading dispatched onto the CAN bus."""
+        # Calculate a mock 8-bit CRC checksum for the E2E profile
+        crc_checksum = (speed_kph ^ sequence_number) & 0xFF
+        
         # 1. The Proxy intercepts the physical layer transmission
-        corrupted_payload = self.proxy.intercept_and_process(speed_kph, sequence_number)
+        corrupted_payload = self.proxy.intercept_and_process(speed_kph, sequence_number, crc_checksum)
         
         # 2. If the proxy dropped the frame entirely, the ECU receives nothing
         if corrupted_payload is not None:
              # The Proxy forwards to the ECU
-             corrupt_speed, corrupt_seq = corrupted_payload
-             self.ecu.on_sensor_message_received(corrupt_speed, corrupt_seq)
+             corrupt_speed, corrupt_seq, corrupt_crc = corrupted_payload
+             self.ecu.on_sensor_message_received(corrupt_speed, corrupt_seq, corrupt_crc)
 
     def tick_all(self, dt_ms: int):
         self.proxy.tick(dt_ms)
@@ -106,3 +109,34 @@ def test_804_stuck_sensor_stale_data(sim):
 
     # After N cycles of identically frozen data despite moving sequence numbers, ECU flags Stale Error
     assert sim.ecu.state == SafeState.STALE_DATA
+
+# -------------------------------------------------------------
+# Part 3: E2E Protection (AUTOSAR Profile 1)
+# -------------------------------------------------------------
+def test_805_e2e_crc_checksum_failure(sim):
+    """TC-805: Proxy recalculates an intentionally invalid CRC"""
+    sim.send_sensor_data(speed_kph=40, sequence_number=1)
+    assert sim.ecu.state == SafeState.NORMAL_OPERATION
+    
+    # INJECT FAULT: Corrupt the CRC Checksum
+    sim.proxy.set_fault_mode(FaultMode.CORRUPT_CRC)
+    
+    sim.send_sensor_data(speed_kph=40, sequence_number=2)
+    sim.tick_all(20)
+    
+    # ECU calculates its own CRC and finds a mismatch with the received CRC
+    assert sim.ecu.state == SafeState.E2E_CRC_ERROR
+
+def test_806_e2e_sequence_duplication(sim):
+    """TC-806: Proxy duplicates a frame representing a Replay Attack or gateway routing loop"""
+    sim.send_sensor_data(speed_kph=60, sequence_number=1)
+    
+    # INJECT FAULT: Duplicate the specific Sequence Counter
+    sim.proxy.set_fault_mode(FaultMode.DUPLICATE_FRAME)
+    
+    # Sensor natively sends Sequence 2, but Proxy overrides it and transmits Sequence 1 again
+    sim.send_sensor_data(speed_kph=60, sequence_number=2)
+    sim.tick_all(20)
+    
+    # ECU recognizes `last_seq == current_seq`
+    assert sim.ecu.state == SafeState.E2E_SEQ_DUPLICATION

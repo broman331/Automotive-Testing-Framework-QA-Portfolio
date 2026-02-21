@@ -4,6 +4,8 @@ class FaultMode:
     LATENCY = "LATENCY"
     CORRUPT_PAYLOAD = "CORRUPT_PAYLOAD"
     STALE_DATA = "STALE_DATA"
+    CORRUPT_CRC = "CORRUPT_CRC"
+    DUPLICATE_FRAME = "DUPLICATE_FRAME"
 
 class FaultProxy:
     """
@@ -14,6 +16,7 @@ class FaultProxy:
         self.latency_ms = 0
         self.stale_speed = None
         self.stuck_counter = 0
+        self.last_sequence_number = -1
 
     def set_fault_mode(self, mode: str, latency_ms: int = 0):
         self.mode = mode
@@ -22,7 +25,7 @@ class FaultProxy:
             self.stale_speed = None # Will grab the next frame
             self.stuck_counter = 0
 
-    def intercept_and_process(self, speed_kph: int, sequence_number: int):
+    def intercept_and_process(self, speed_kph: int, sequence_number: int, crc_checksum: int):
         """Processes the intercepted message and returns the sabotaged payload, or None if dropped."""
         if self.mode == FaultMode.DROP_ALL:
             return None
@@ -36,18 +39,38 @@ class FaultProxy:
         elif self.mode == FaultMode.CORRUPT_PAYLOAD:
             # Bit-flip simulation: Turn 11 (0000 1011) into 139 (1000 1011)
             corrupted_speed = speed_kph | 0x80 # Flip the highest bit
-            return (corrupted_speed, sequence_number)
+            # We must recalculate the CRC for the new payload, otherwise the ECU drops it at the E2E layer
+            # and never calculates our intended Implausible Signal physics test.
+            new_crc = (corrupted_speed ^ sequence_number) & 0xFF
+            return (corrupted_speed, sequence_number, new_crc)
             
         elif self.mode == FaultMode.STALE_DATA:
             if self.stale_speed is None:
                 self.stale_speed = speed_kph # Freeze on the first value
                 
-            # The sensor tries to send a new speed, but the proxy overwrites the payload 
-            # with the frozen value, while keeping the sequence number climbing natively.
-            return (self.stale_speed, sequence_number)
+            # Recalculate CRC using the frozen speed but the natively incremented sequence
+            stuck_crc = (self.stale_speed ^ sequence_number) & 0xFF
+            return (self.stale_speed, sequence_number, stuck_crc)
+            
+        elif self.mode == FaultMode.CORRUPT_CRC:
+            # Re-calculate a completely garbage Checksum instead of the expected one
+            bad_crc = (crc_checksum + 1) % 256
+            return (speed_kph, sequence_number, bad_crc)
+            
+        elif self.mode == FaultMode.DUPLICATE_FRAME:
+            if self.last_sequence_number == -1:
+                self.last_sequence_number = sequence_number
+                return (speed_kph, sequence_number, crc_checksum)
+                
+            # Proxy forces the sequence counter to be exactly what it was last time
+            corrupt_seq = self.last_sequence_number
+            # CRC must be recalculated because sequence changed, or ECU trips the CRC error instead!
+            new_crc = (speed_kph ^ corrupt_seq) & 0xFF
+            return (speed_kph, corrupt_seq, new_crc)
             
         # Normal Mode
-        return (speed_kph, sequence_number)
+        self.last_sequence_number = sequence_number
+        return (speed_kph, sequence_number, crc_checksum)
         
     def tick(self, dt_ms: int):
         pass

@@ -4,6 +4,8 @@ class SafeState:
     TIMING_VIOLATION = "TIMING_VIOLATION"
     IMPLAUSIBLE_SIGNAL = "IMPLAUSIBLE_SIGNAL"
     STALE_DATA = "STALE_DATA"
+    E2E_CRC_ERROR = "E2E_CRC_ERROR"
+    E2E_SEQ_DUPLICATION = "E2E_SEQ_DUPLICATION"
 
 class SafetyECU:
     """
@@ -23,7 +25,17 @@ class SafetyECU:
         self.MAX_STALE_CYCLES = 3
         self.MAX_DELTAV_PER_CYCLE = 30 # Impossible to accelerate/brake more than 30kph in 20ms
 
-    def on_sensor_message_received(self, speed_kph: int, sequence_number: int):
+    def on_sensor_message_received(self, speed_kph: int, sequence_number: int, crc_checksum: int):
+        # 0. E2E (End to End) Protection Profile 1 Checks
+        expected_crc = (speed_kph ^ sequence_number) & 0xFF
+        if crc_checksum != expected_crc:
+            self.state = SafeState.E2E_CRC_ERROR
+            return # Drop invalid frame entirely
+            
+        if sequence_number == self.last_seq:
+            self.state = SafeState.E2E_SEQ_DUPLICATION
+            return # Drop duplicated frames
+            
         # 1. Check for Timing Violations (Jitter > max allowed)
         if self.time_since_last_msg_ms > self.MAX_TIMEOUT_MS:
             if self.state != SafeState.SAFE_STATE_COM_LOSS: 

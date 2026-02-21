@@ -11,6 +11,8 @@ This repository features a Man-In-The-Middle (MITM) CAN logic proxy simulating p
     * `LATENCY`: Simulates critical CPU starvation or network congestion.
     * `CORRUPT_PAYLOAD`: Simulates Electromagnetic Interference (EMI) flipping significant payload bits.
     * `STALE_DATA`: Simulates a sensor locking up and transmitting frozen data sequences.
+    * `CORRUPT_CRC`: Tests AUTOSAR E2E Profile 1 by sabotaging cryptographic payload checksums.
+    * `DUPLICATE_FRAME`: Replicates sequence counters to mimic gateway loops or Malicious Replay Attacks.
 2. **`safety_ecu.py`**: The Software-under-Test tracking incoming messages. It parses Delta-V physics constraints, cycle timers, and sequence numbers.
 3. **`tests/test_iso26262_faults.py`**: The `pytest` test suite controlling the Proxy faults and asserting that the ECU transitions to the correct Safe State (e.g., `IMPLAUSIBLE_SIGNAL`, `TIMING_VIOLATION`, `SAFE_STATE_COM_LOSS`).
 
@@ -20,6 +22,8 @@ The automated Pytest suite covers:
 * **TC-802 High Latency**: Validates jitter calculation. If a message is delayed but the timeout limit hasn't tripped, it is correctly flagged as a timing violation rather than complete loss.
 * **TC-803 EMI Bit-Flipping**: Validates mathematical integrity. If the payload dictates an impossible 129km/h speed jump in 20 milliseconds, the ECU rejects it.
 * **TC-804 Stale Data Lock**: Validates sequence parsing. If the payload is identical for 3 consecutive sequences, the stream is flagged as frozen.
+* **TC-805 E2E CRC Checksum**: Validates the payload-to-hash match. The module protects against dirty payloads bypassing checksum gates.
+* **TC-806 E2E Sequence Duplication**: Counters message saturation or Replay spoofing by isolating consecutive matching Sequence IDs.
 
 ## Docker & Automation
 Tests are fully containerized using Docker and executed automatically via the `.github/workflows/ci_subproj8.yml` pipeline.
